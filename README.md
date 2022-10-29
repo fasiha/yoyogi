@@ -74,3 +74,30 @@ For simplicity/narcissism, we'll look at our own statuses (toots). This download
 ```bash
 curl -H "Authorization: Bearer $TOKEN" $MASTODON/api/v1/accounts/$MASTODON_ID/statuses -O
 ```
+
+This will return an array of toots (replies, boosts, DMs if you're authorized to see them, etc.) in time order.
+
+## Convert a status to its ancestors and descendants
+The way toots work is, each toot can have only one (or no) parent, but it can have any number of children. Given we get a list of toots most-recent-first, for each of them we'll want to find all their ancestor toots, up to the the oldest ancestor (the progenitor).
+
+One useful thing might be—each toot has a `in_reply_to_id`, which gives us the *parent toot ID* of this toot. It'll be either some long number or `null`, meaning this toot is a progenitor toot:
+```bash
+cat statuses | jq '.[].in_reply_to_id'
+```
+This will hopefully print a mix of numbers and `null`s.
+
+Let's get first `in_reply_to_id` we have, and ask Mastodon for all of that parent toot's ancestors and descendants. First, set up an environment variable for that status ID:
+```bash
+export STATUS_ID=`cat statuses | jq -r '.[].in_reply_to_id' | grep -v null | head -n1`
+```
+If you don't have jq or if you don't see any replies in your list of `statuses`, just run instead `export STATUS_ID=SOME_STATUS_ID`.
+
+Now we can ask the server for that status ID's context, saving the reply to a file called `context`:
+```bash
+curl -H "Authorization: Bearer $TOKEN" $MASTODON/api/v1/statuses/$STATUS_ID/context -O
+```
+The server returns two lists of statuses:
+- `ancestors` and
+- `descendants`.
+
+The `ancestors` array is the direct chain all the way up from `STATUS_ID` to the progenitor toot. The earliest toot comes first. Similarly, `descendants` includes all children, grandchildren, and descendents, also in earliest first. In either case, there will be toots from you and from others (depending on whether you replied to someone or others replied to you). It's not clear to me whether this is paginated, i.e., if only 40 descendants are returned.
