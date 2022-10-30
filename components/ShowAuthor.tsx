@@ -16,6 +16,14 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
   return (
     <>
       We know about {statuses.length} statuses for @{account.username}!
+      <ul>
+        {statuses.map((s) => (
+          <li key={s.id}>
+            {s.account.username}: {s.content.replace(/<.*?>/g, "")}{" "}
+            {s.created_at}
+          </li>
+        ))}
+      </ul>
     </>
   );
 }
