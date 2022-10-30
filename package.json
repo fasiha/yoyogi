@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build-static": "GHPAGES_EXPORT=1 next build && next export",
     "start": "next start",
     "lint": "next lint"
   },
