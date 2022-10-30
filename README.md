@@ -77,7 +77,7 @@ curl -H "Authorization: Bearer $TOKEN" $MASTODON/api/v1/accounts/$MASTODON_ID/st
 
 This will return an array of toots (replies, boosts, DMs if you're authorized to see them, etc.) in time order.
 
-## Convert a status to its ancestors and descendants
+## Convert a toot to its ancestors and descendants
 The way toots work is, each toot can have only one (or no) parent, but it can have any number of children. Given we get a list of toots most-recent-first, for each of them we'll want to find all their ancestor toots, up to the the oldest ancestor (the progenitor).
 
 One useful thing might be—each toot has a `in_reply_to_id`, which gives us the *parent toot ID* of this toot. It'll be either some long number or `null`, meaning this toot is a progenitor toot:
@@ -101,3 +101,65 @@ The server returns two lists of statuses:
 - `descendants`.
 
 The `ancestors` array is the direct chain all the way up from `STATUS_ID` to the progenitor toot. The earliest toot comes first. Similarly, `descendants` includes all children, grandchildren, and descendents, also in earliest first. In either case, there will be toots from you and from others (depending on whether you replied to someone or others replied to you). It's not clear to me whether this is paginated, i.e., if only 40 descendants are returned.
+
+## Different time windows
+This might not be strictly necessary maybe but I think it'll probably be useful. There are three different ways to ask Mastodon for old toots *relative* to some toot ID. Per https://mastodonpy.readthedocs.io/en/stable/ (I'm not sure where this information is in the official Mastodon docs…):
+- `min_id`,
+- `since_id`, and
+- `max_id`.
+
+Let's try to get an *old* toot's ID to demonstrate:
+```bash
+export STATUS_ID=`cat statuses | jq -r '.[].id' | tail -n1`
+```
+will put the oldest toot ID in the `STATUS_ID` environment variable. Now we'll ask Mastodon for toots (statuses) in each of these three windows and save them to three different files:
+```bash
+curl -H "Authorization: Bearer $TOKEN" "$MASTODON/api/v1/accounts/$MASTODON_ID/statuses?min_id=$STATUS_ID" -o statuses-min_id
+curl -H "Authorization: Bearer $TOKEN" "$MASTODON/api/v1/accounts/$MASTODON_ID/statuses?since_id=$STATUS_ID" -o statuses-since_id
+curl -H "Authorization: Bearer $TOKEN" "$MASTODON/api/v1/accounts/$MASTODON_ID/statuses?max_id=$STATUS_ID" -o statuses-max_id
+```
+
+And here's a quick way to look at the timestamps on the toots returned:
+```bash
+for var in min_id since_id max_id; do
+  echo "Displaying $var"
+  cat statuses-$var | jq '.[].created_at'
+done
+```
+You can puzzle over this output to see the differences, or read the [prose description](https://mastodonpy.readthedocs.io/en/stable/), but here's a diagram:
+```
+                STATUS_ID
+                    |
+            (min_id]|
+now ················|············→ past
+     [since_id)      [max_id)
+```
+In words,
+- `min_id` is a list of toots posted after `STATUS_ID`, anchored at `STATUS_ID` and growing towards the present.
+- `since_id` is a list of toots, starting now and growing towards the past, stopping at `STATUS_ID` or more recent.
+- `max_id` is a list of toots immpediately preceding `STATUS_ID` and growing towards the past.
+
+(All three list of toots starts at the most recent one first.)
+
+It always annoys me that Mastodon has no way to jump to someone's oldest toot—a recency bias infecting much of social media. Well, we can use `min_id=0` for that, to return the oldest toots. The following saves a file `statuses-oldest` and lists these toots' timestamp:
+```bash
+curl -H "Authorization: Bearer $TOKEN" "$MASTODON/api/v1/accounts/$MASTODON_ID/statuses?min_id=0" -o statuses-oldest
+cat statuses-oldest | jq '.[].created_at'
+```
+And just for fun, here's a script to print out the contents of those ancient toots, stripping the HTML to make it easy to read:
+```bash
+cat statuses-oldest | jq '.[].content' | sed 's/<[^>]*>//g'
+```
+Ah, memories!
+
+## A plan
+So here's a rough initial unoptimized plan for Yoyogi:
+1. get the list of most recent statuses (toots) via the `statuses` endpoint for some account.
+2. For each status, get the ancestors and descendants via the `context` endpoint.
+3. Some of the statuses in step 1 might be in the ancestors/descendents tree in step 2. So build the directed trees knowing there may be fewer trees than statuses.
+4. "Prune" each of these trees so that the leaf nodes are only by the account. (Don't actually truncate the tree at these points, maybe just "fold" them, since we'll want to know how many non-account replies live below that "fold".)
+5. Render each of these trees in the Yoyogi UI, one column per tree.
+
+Optimizations include:
+- make simple trees after step 1 above, maybe we can ask the server for fewer `context`s than statuses.
+- Cache these somewhere. It would be really interesting to make a Mastodon cache that either removes a lot of keys we don't need for every status (toot), or provides a GraphQL layer so each client can customize what keys it wants for each status (toot) returned.
