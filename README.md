@@ -34,7 +34,7 @@ you'll get something like
 (You might also get some other errors if your account is suspended, etc., see https://docs.joinmastodon.org/methods/accounts/ --> "Verify account credentials")
 
 ## Get your account ID
-Do you have jq? If you do, this is easy: run the same curl command above and pipe it to jq to get your account ID:
+Do you have [jq](https://stedolan.github.io/jq/download/)? If you do, this is easy: run the same curl command above and pipe it to jq to get your account ID:
 ```bash
 curl -q -H "Authorization: Bearer $TOKEN" $MASTODON/api/v1/accounts/verify_credentials | jq -r '.id'
 ```
