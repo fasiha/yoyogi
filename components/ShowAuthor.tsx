@@ -47,7 +47,7 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
               {thread.map((status) => (
                 <li key={status.id}>
                   {status.account.username}:{" "}
-                  {status.content.replace(/<.*?>/g, "")} {status.created_at}
+                  {status.content.replace(/<.*?>/g, "")} <sup>{status.created_at}</sup> <sub>{status.id}</sub>
                 </li>
               ))}
             </ol>
@@ -63,7 +63,7 @@ function findAllDescsendants(
   start: string
 ): string[] {
   const hit = parent2child.get(start);
-  if (!hit) return [];
+  if (!hit) return [start];
   return [start].concat(
     Array.from(hit).flatMap((child) => findAllDescsendants(parent2child, child))
   );
