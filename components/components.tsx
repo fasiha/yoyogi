@@ -1,6 +1,7 @@
-import generator, { Entity, Response } from "megalodon";
+import generator, { Entity, MegalodonInterface, Response } from "megalodon";
 import { useState } from "react";
 import styles from "../styles/components.module.css";
+import { ShowAuthor } from "./ShowAuthor";
 
 interface LoginProps {
   loggedIn: boolean;
@@ -62,26 +63,30 @@ function removeTrailingSlashes(url: string) {
 async function verify(
   url: string,
   token: string
-): Promise<undefined | Entity.Account> {
-  const client = generator("mastodon", url, token);
+): Promise<
+  undefined | { megalodon: MegalodonInterface; account: Entity.Account }
+> {
+  const megalodon = generator("mastodon", url, token);
   try {
-    const res = await client.verifyAccountCredentials();
+    const res = await megalodon.verifyAccountCredentials();
     // above will throw if 401 (unauthorized) or 404 (bad URL)
-    return res.data;
+    return { megalodon, account: res.data };
   } catch (e) {
     console.error("Network error:", e);
     return undefined;
   }
 }
 export function Yoyogi() {
-  const [url, setUrl] = useState("");
-  const [token, setToken] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [megalodon, setMegalodon] = useState<MegalodonInterface | undefined>(
+    undefined
+  );
+  const [account, setAccount] = useState<Entity.Account | undefined>(undefined);
+
+  const loggedIn = !!account && !!megalodon;
 
   const logout = () => {
-    setUrl("");
-    setToken("");
-    setLoggedIn(false);
+    setMegalodon(undefined);
+    setAccount(undefined);
   };
 
   const loginProps: LoginProps = {
@@ -91,9 +96,8 @@ export function Yoyogi() {
       enteredUrl = removeTrailingSlashes(enteredUrl);
       const res = await verify(enteredUrl, enteredToken);
       if (res) {
-        setUrl(enteredUrl);
-        setToken(token);
-        setLoggedIn(true);
+        setMegalodon(res.megalodon);
+        setAccount(res.account);
         console.log(res);
       }
     },
@@ -102,6 +106,9 @@ export function Yoyogi() {
     <div>
       <h1>Yoyogi</h1>
       <Login {...loginProps} />
+      {account && megalodon && (
+        <ShowAuthor account={account} megalodon={megalodon} />
+      )}
     </div>
   );
 }
