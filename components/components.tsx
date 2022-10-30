@@ -1,3 +1,4 @@
+import generator, { Entity, Response } from "megalodon";
 import { useState } from "react";
 import styles from "../styles/components.module.css";
 
@@ -61,20 +62,14 @@ function removeTrailingSlashes(url: string) {
 async function verify(
   url: string,
   token: string
-): Promise<undefined | Record<string, any>> {
-  // curl -H "Authorization: Bearer $TOKEN" $MASTODON/api/v1/accounts/verify_credentials
+): Promise<undefined | Entity.Account> {
+  const client = generator("mastodon", url, token);
   try {
-    const req = await fetch(`${url}/api/v1/accounts/verify_credentials`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!req.ok) {
-      console.error("Did not work", req.status, req.statusText);
-      return undefined;
-    }
-    const res = await req.json();
-    return res;
+    const res = await client.verifyAccountCredentials();
+    // above will throw if 401 (unauthorized) or 404 (bad URL)
+    return res.data;
   } catch (e) {
-    console.error("Unable to even connect to url", e);
+    console.error("Network error:", e);
     return undefined;
   }
 }
