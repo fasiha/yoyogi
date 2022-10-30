@@ -1,5 +1,7 @@
 import { Entity, MegalodonInterface } from "megalodon";
 import { useEffect, useState } from "react";
+import styles from "../styles/ShowAuthor.module.css";
+
 export interface ShowAuthorProps {
   megalodon: MegalodonInterface;
   account: Entity.Account;
@@ -47,7 +49,9 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
               {thread.map((status) => (
                 <li key={status.id}>
                   {status.account.username}:{" "}
-                  {status.content.replace(/<.*?>/g, "")} <sup>{status.created_at}</sup> <sub>{status.id}</sub>
+                  {status.content.replace(/<.*?>/g, "")} <span className={styles['supsub']}>
+                    <sup>{status.created_at}</sup><sub>{status.id}</sub>
+                  </span>
                 </li>
               ))}
             </ol>
