@@ -98,7 +98,6 @@ export function Yoyogi() {
       if (res) {
         setMegalodon(res.megalodon);
         setAccount(res.account);
-        console.log(res);
       }
     },
   };

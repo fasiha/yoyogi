@@ -1,63 +1,37 @@
 import { Entity, MegalodonInterface } from "megalodon";
 import { useEffect, useState } from "react";
-import styles from "../styles/ShowAuthor.module.css";
+import { Thread } from "./Thread";
 
 export interface ShowAuthorProps {
   megalodon: MegalodonInterface;
   account: Entity.Account;
 }
 export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
-  const [threads, setThreads] = useState<Entity.Status[][]>([]);
+  const [trees, setTrees] = useState<Trees | undefined>(undefined);
   useEffect(() => {
     (async function () {
-      const res = await megalodon.getAccountStatuses(account.id);
-
+      const res = await megalodon.getAccountStatuses(account.id, {});
       const trees = await statusesToTrees(res.data, megalodon, account.id);
       (window as any).trees = trees;
-      (window as any).findAllDescsendants = findAllDescsendants;
-      const newThreads: Entity.Status[][] = [];
-      for (const ancestorId of trees.progenitorIds) {
-        const hit = trees.id2status.get(ancestorId);
-        if (!hit) {
-          continue;
-        }
-        const thread = findAllDescsendants(
-          trees.parent2childid,
-          ancestorId
-        ).map((id) => {
-          const hit = trees.id2status.get(id);
-          if (!hit) {
-            throw new Error("?");
-          }
-          return hit;
-        });
-        thread.sort((a, b) => a.created_at.localeCompare(b.created_at));
-
-        newThreads.push(thread);
-      }
-      setThreads(newThreads);
+      setTrees(trees);
     })();
   }, [megalodon, account]);
 
   return (
     <>
-      We know about {threads.length} threads for @{account.username}!
-      <ul>
-        {threads.map((thread) => (
-          <li key={"" + thread[0].id + thread.length}>
-            <ol>
-              {thread.map((status) => (
-                <li key={status.id}>
-                  {status.account.username}:{" "}
-                  {status.content.replace(/<.*?>/g, "")} <span className={styles['supsub']}>
-                    <sup>{status.created_at}</sup><sub>{status.id}</sub>
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </li>
+      Showing {trees?.progenitorIds.size ?? 0} thread
+      {trees?.progenitorIds.size !== 1 && "s"} for @{account.username}!
+      <div>
+        {Array.from(trees?.progenitorIds || [], (id) => (
+          <Thread
+            key={id + "/0"}
+            trees={trees}
+            progenitorId={id}
+            authorId={account.id}
+            depth={1}
+          />
         ))}
-      </ul>
+      </div>
     </>
   );
 }
@@ -73,11 +47,19 @@ function findAllDescsendants(
   );
 }
 
+export type Trees = {
+  progenitorIds: Set<string>;
+  parent2foldedchildren: Map<string, Set<string>>;
+  id2status: Map<string, Entity.Status>;
+  child2parentid: Map<string, string>;
+  parent2childid: Map<string, Set<string>>;
+};
+
 async function statusesToTrees(
   statuses: Entity.Status[],
   megalodon: MegalodonInterface,
   authorId: string
-) {
+): Promise<Trees> {
   const contexts: Entity.Context[] = [];
 
   // serialize this to reduce Chrome making a ton of HTTP requests
@@ -131,28 +113,42 @@ async function statusesToTrees(
   }
 
   // ids of statuses by the author below which are only non-author statuses
-  const tombstoneIds = new Set<string>();
+  const parent2foldedchildren = new Map<string, Set<string>>();
 
   // prune the trees
   for (const [id, status] of id2status.entries()) {
-    const hit = parent2childid.get(id);
-    if (hit?.size === 0) {
+    // we're looking for subtrees containing only NON-authors
+    if (status.account.id === authorId) {
+      continue;
+    }
+
+    const children = parent2childid.get(id);
+    if (!children || children.size === 0) {
       // this status is a leaf node (no children). Start here and find the first post by author
       let thisStatus = status;
-      while (thisStatus.account.id !== authorId) {
-        const hitStatus = id2status.get(
+      while (thisStatus.account.id !== authorId && thisStatus.in_reply_to_id) {
+        // thisStatus is NOT by author and it has a parent.
+        // Is the parent by author? If so, it should fold thisStatus
+        const parentOfThis = id2status.get(
           child2parentid.get(thisStatus.id) ?? ""
         );
-        if (hitStatus) {
-          thisStatus = hitStatus;
+        if (!parentOfThis) {
+          throw new Error("cannot find status with this id?"); // should never ever happen
         }
+        if (parentOfThis.account.id === authorId) {
+          const hit = parent2foldedchildren.get(parentOfThis.id) || new Set();
+          hit.add(thisStatus.id);
+          parent2foldedchildren.set(parentOfThis.id, hit);
+          break;
+        }
+        // Nope the parent is by non-author, let's keep looking for a potential fold
+        thisStatus = parentOfThis;
       }
-      tombstoneIds.add(thisStatus.id);
     }
   }
   return {
     progenitorIds,
-    tombstoneIds,
+    parent2foldedchildren,
     id2status,
     child2parentid,
     parent2childid,
