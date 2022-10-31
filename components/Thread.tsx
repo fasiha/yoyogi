@@ -70,11 +70,7 @@ export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
         <li key={thisStatus.id}>
           {basicStatusToJsx(thisStatus)}
           {foldFooter}
-          <ul>
-            {childrenToShow.map((s) => (
-              <li key={s.id + "…"}>[{statusToPlain(s).slice(0, 10)}…]</li>
-            ))}
-          </ul>
+
           {childrenToShow.map((s) => (
             <Thread
               key={s.id + "/" + depth}
@@ -89,7 +85,14 @@ export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
       thisStatus = undefined;
     }
   }
-  return <ol>{bullets}</ol>;
+  return depth === 1 ? (
+    <ol>{bullets}</ol>
+  ) : (
+    <details open>
+      <summary>{statusToPlain(progenitor).slice(0, 20)}…</summary>{" "}
+      <ol>{bullets}</ol>
+    </details>
+  );
 }
 
 interface TootProps {
