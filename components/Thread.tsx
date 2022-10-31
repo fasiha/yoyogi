@@ -72,7 +72,7 @@ export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
           {foldFooter}
           <ul>
             {childrenToShow.map((s) => (
-              <li>[{statusToPlain(s).slice(0, 10)}…]</li>
+              <li key={s.id + "…"}>[{statusToPlain(s).slice(0, 10)}…]</li>
             ))}
           </ul>
           {childrenToShow.map((s) => (
