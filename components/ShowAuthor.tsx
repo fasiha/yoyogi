@@ -6,7 +6,7 @@ export type Trees = {
   // Set to hold the toots starting threads (even of length 1), also indexed by ID (number)
   progenitorIds: Set<string>;
   // ids of statuses by the author below which are only non-author statuses
-  parent2foldedchildren: Map<string, Set<string>>;
+  foldedIds: Map<string, boolean>;
   // Map between ID (number) and its corresponding status object
   id2status: Map<string, Entity.Status>;
   // Maps to hold the directed graph of toots: indexed by ID (number) only
@@ -19,7 +19,7 @@ export type Trees = {
 function initializeTrees(): Trees {
   return {
     progenitorIds: new Set(),
-    parent2foldedchildren: new Map(),
+    foldedIds: new Map(),
     id2status: new Map(),
     child2parentid: new Map(),
     parent2childid: new Map(),
@@ -241,30 +241,47 @@ async function addStatusesToTreesImpure(
 
   // prune the trees
   for (const [id, status] of trees.id2status.entries()) {
-    // we're looking for subtrees containing only NON-authors
-    if (status.account.id === authorId) {
+    // we need all leaf nodes
+    const children = trees.parent2childid.get(id);
+    if (children && children.size > 0) {
+      continue;
+    }
+    // Ok this is a leaf node
+    // Might as well skip progenitors too
+    if (!status.in_reply_to_id) {
       continue;
     }
 
-    const children = trees.parent2childid.get(id);
-    if (!children || children.size === 0) {
-      // this status is a leaf node (no children). Start here and find the first post by author
+    if (status.account.id === authorId) {
+      // Ah it's by author, so all ancestors should NOT BE FOLDED!
+      // start here and mark all parents as non-folding
       let thisStatus = status;
-      while (thisStatus.account.id !== authorId && thisStatus.in_reply_to_id) {
-        // thisStatus is NOT by author and it has a parent.
-        // Is the parent by author? If so, it should fold thisStatus
+      while (thisStatus.in_reply_to_id) {
+        if (thisStatus.account.id !== authorId) {
+          trees.foldedIds.set(thisStatus.id, false);
+        }
         const parentOfThis = getGuaranteed(
           trees.id2status,
           getGuaranteed(trees.child2parentid, thisStatus.id)
         );
-        if (parentOfThis.account.id === authorId) {
-          const hit =
-            trees.parent2foldedchildren.get(parentOfThis.id) || new Set();
-          hit.add(thisStatus.id);
-          trees.parent2foldedchildren.set(parentOfThis.id, hit);
+        thisStatus = parentOfThis;
+      }
+    } else {
+      // Ah this is not by author. Mark it and all subsequent non-author toots as folded.
+      // Then stop looking at the first author toot
+      let thisStatus = status;
+      while (thisStatus.account.id !== authorId && thisStatus.in_reply_to_id) {
+        const hit = trees.foldedIds.get(thisStatus.id);
+        if (hit === undefined) {
+          trees.foldedIds.set(thisStatus.id, true);
+        } else {
+          // no need to keep walking up the tree, we've been here before
           break;
         }
-        // Nope the parent is by non-author, let's keep looking for a potential fold
+        const parentOfThis = getGuaranteed(
+          trees.id2status,
+          getGuaranteed(trees.child2parentid, thisStatus.id)
+        );
         thisStatus = parentOfThis;
       }
     }

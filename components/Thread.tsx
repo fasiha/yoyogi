@@ -32,27 +32,22 @@ export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
     const childrenOfThis: Entity.Status[] = Array.from(
       trees.parent2childid.get(thisStatus.id) || []
     ).map((s) => getGuaranteed(trees.id2status, s));
-    const foldedChildren: Set<string> =
-      trees.parent2foldedchildren.get(thisStatus.id) || new Set();
-    const numChildrenToShow = childrenOfThis.length - foldedChildren.size;
     const childrenToShow = childrenOfThis.filter(
-      (s) => !foldedChildren.has(s.id)
+      (s) => trees.foldedIds.get(s.id) !== true
     );
-    if (numChildrenToShow !== childrenToShow.length) {
-      throw new Error("these should be equal?");
-    }
+    const numFoldedChildren = childrenOfThis.length - childrenToShow.length;
 
-    const foldFooter = foldedChildren.size ? (
+    const foldFooter = numFoldedChildren ? (
       <sub>
         {" "}
-        {foldedChildren.size} hidden{" "}
-        {foldedChildren.size === 1 ? "reply" : "replies"}
+        {numFoldedChildren} hidden{" "}
+        {numFoldedChildren === 1 ? "reply" : "replies"}
       </sub>
     ) : (
       ""
     );
 
-    if (numChildrenToShow <= 1) {
+    if (childrenToShow.length <= 1) {
       // either no children or just one child (straight-shot thread)
       bullets.push(
         <li key={thisStatus.id}>
