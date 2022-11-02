@@ -5,9 +5,9 @@ import { Thread } from "./Thread";
 export type Trees = {
   // Set to hold the toots starting threads (even of length 1), also indexed by ID (number)
   progenitorIds: Set<string>;
+  // ids of statuses by the author below which are only non-author statuses
   parent2foldedchildren: Map<string, Set<string>>;
   // Map between ID (number) and its corresponding status object
-
   id2status: Map<string, Entity.Status>;
   // Maps to hold the directed graph of toots: indexed by ID (number) only
   child2parentid: Map<string, string>;
@@ -239,9 +239,6 @@ async function addStatusesToTreesImpure(
     }
   }
 
-  // ids of statuses by the author below which are only non-author statuses
-  const parent2foldedchildren = new Map<string, Set<string>>();
-
   // prune the trees
   for (const [id, status] of trees.id2status.entries()) {
     // we're looking for subtrees containing only NON-authors
@@ -256,16 +253,15 @@ async function addStatusesToTreesImpure(
       while (thisStatus.account.id !== authorId && thisStatus.in_reply_to_id) {
         // thisStatus is NOT by author and it has a parent.
         // Is the parent by author? If so, it should fold thisStatus
-        const parentOfThis = trees.id2status.get(
-          trees.child2parentid.get(thisStatus.id) ?? ""
+        const parentOfThis = getGuaranteed(
+          trees.id2status,
+          getGuaranteed(trees.child2parentid, thisStatus.id)
         );
-        if (!parentOfThis) {
-          throw new Error("cannot find status with this id?"); // should never ever happen
-        }
         if (parentOfThis.account.id === authorId) {
-          const hit = parent2foldedchildren.get(parentOfThis.id) || new Set();
+          const hit =
+            trees.parent2foldedchildren.get(parentOfThis.id) || new Set();
           hit.add(thisStatus.id);
-          parent2foldedchildren.set(parentOfThis.id, hit);
+          trees.parent2foldedchildren.set(parentOfThis.id, hit);
           break;
         }
         // Nope the parent is by non-author, let's keep looking for a potential fold
@@ -273,4 +269,12 @@ async function addStatusesToTreesImpure(
       }
     }
   }
+}
+
+export function getGuaranteed<K, V>(m: Map<K, V>, key: K): V {
+  const ret = m.get(key);
+  if (ret === undefined) {
+    throw new Error("safeGet was unsafe");
+  }
+  return ret;
 }

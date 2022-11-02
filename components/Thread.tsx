@@ -1,5 +1,5 @@
 import { Entity, MegalodonInterface } from "megalodon";
-import { Trees } from "./ShowAuthor";
+import { getGuaranteed, Trees } from "./ShowAuthor";
 import stylesAuthor from "../styles/ShowAuthor.module.css";
 
 function statusToPlain(status: Entity.Status): string {
@@ -19,15 +19,11 @@ function basicStatusToJsx(status: Entity.Status): JSX.Element {
 
 export interface ThreadProps {
   progenitorId: string;
-  trees?: Trees;
+  trees: Trees;
   authorId: string;
   depth: number;
 }
 export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
-  if (!trees) {
-    return <></>;
-  }
-
   const progenitor = getGuaranteed(trees.id2status, progenitorId);
   const bullets: JSX.Element[] = [];
 
@@ -89,41 +85,8 @@ export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
     <ol>{bullets}</ol>
   ) : (
     <details open>
-      <summary>{statusToPlain(progenitor).slice(0, 20)}…</summary>{" "}
+      <summary></summary>
       <ol>{bullets}</ol>
     </details>
   );
-}
-
-interface TootProps {
-  status: Entity.Status;
-  trees: Trees;
-}
-function Toot({ status }: TootProps) {}
-
-function getGuaranteed<K, V>(m: Map<K, V>, key: K): V {
-  const ret = m.get(key);
-  if (ret === undefined) {
-    throw new Error("safeGet was unsafe");
-  }
-  return ret;
-}
-
-function statusToRepliesHelper(
-  status: Entity.Status,
-  trees: Trees,
-  authorId: string
-): { numReplies: number; numAuthorReplies: number; numOtherReplies: number } {
-  const childIds = trees.parent2childid.get(status.id);
-  if (!childIds) {
-    return { numReplies: 0, numAuthorReplies: 0, numOtherReplies: 0 };
-  }
-  const children = Array.from(childIds, (id) =>
-    getGuaranteed(trees.id2status, id)
-  );
-  const numAuthorReplies = children.filter(
-    (s) => s.account.id === authorId
-  ).length;
-  const numOtherReplies = children.length - numAuthorReplies;
-  return { numReplies: children.length, numAuthorReplies, numOtherReplies };
 }
