@@ -1,16 +1,20 @@
 /* Via https://stackoverflow.com/a/24908149 */
 .supsub {
-    display: inline-block;
+  display: inline-block;
 }
 
 .supsub sup,
 .supsub sub {
-    position: relative;
-    display: block;
-    font-size: .5em;
-    line-height: 1.2;
+  position: relative;
+  display: block;
+  font-size: 0.5em;
+  line-height: 1.2;
 }
 
 .supsub sub {
-    top: .3em;
+  top: 0.3em;
+}
+
+.all-threads ol {
+  padding-left: 1em;
 }

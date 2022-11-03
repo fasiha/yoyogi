@@ -1,6 +1,7 @@
 import { Entity, MegalodonInterface } from "megalodon";
 import { useEffect, useState } from "react";
 import { Thread } from "./Thread";
+import styles from "../styles/ShowAuthor.module.css";
 
 export type Trees = {
   // Set to hold the toots starting threads (even of length 1), also indexed by ID (number)
@@ -12,6 +13,8 @@ export type Trees = {
   // Maps to hold the directed graph of toots: indexed by ID (number) only
   child2parentid: Map<string, string>;
   parent2childid: Map<string, Set<string>>;
+  // For counting and display
+  // id2numDescendants: Map<string, { all: number; shown: number }>;
   maxContiguousId?: string;
   minContiguousId?: string;
 };
@@ -23,6 +26,7 @@ function initializeTrees(): Trees {
     id2status: new Map(),
     child2parentid: new Map(),
     parent2childid: new Map(),
+    // id2numDescendants: new Map(),
   };
 }
 
@@ -134,7 +138,7 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
       >
         Oldest
       </button>
-      <div>
+      <div className={styles["all-threads"]}>
         {Array.from(trees.progenitorIds)
           .sort((a, b) => b.localeCompare(a))
           .map((id) => (
@@ -195,94 +199,89 @@ async function addStatusesToTreesImpure(
     trees.minContiguousId = min;
   }
 
-  for (const s of statuses) {
-    trees.id2status.set(s.id, s);
-  }
-
-  const contexts: Entity.Context[] = [];
-
   // serialize this to reduce Chrome making a ton of HTTP requests
   // Otherwise we could use Promise.all…
   for (const s of statuses) {
-    // this should really be in try/catch
-    const context = (await megalodon.getStatusContext(s.id)).data;
+    if (trees.id2status.has(s.id)) {
+      continue;
+    }
 
-    contexts.push(context);
-  }
+    // these `getStatusContext`s should really be in try/catch
 
-  // make the big trees (populate the above maps/sets)
-  for (const [idx, context] of contexts.entries()) {
-    const status = statuses[idx];
-    const { ancestors, descendants } = context;
+    // find the progenitor, get all its descendants
+    const progenitor = s.in_reply_to_id
+      ? (await megalodon.getStatusContext(s.id, { max_id: s.id })).data
+          .ancestors[0]
+      : s;
+    trees.progenitorIds.add(progenitor.id);
 
-    // link context's statuses
-    for (const s of ancestors.concat(descendants)) {
-      if (s.in_reply_to_id === null) {
-        trees.progenitorIds.add(s.id);
+    const data = (await megalodon.getStatusContext(progenitor.id)).data;
+    const descendants = data.descendants;
+    // will this have a limit? Do we have to recurse with `max_id`?
+
+    // this set will eventually contain just leaf nodes
+    const allIdsMinusParents = new Set<string>(descendants.map((s) => s.id));
+    allIdsMinusParents.add(progenitor.id);
+
+    trees.id2status.set(progenitor.id, progenitor);
+    for (const d of descendants) {
+      trees.id2status.set(d.id, d);
+      const parentOfD = d.in_reply_to_id;
+      if (!parentOfD) {
+        // won't happen since this is not a progenitor
+        continue;
+      }
+      // link child to parent and vice versa
+      const hit = trees.parent2childid.get(parentOfD) || new Set();
+      hit.add(d.id);
+      trees.parent2childid.set(parentOfD, hit);
+      if (trees.parent2childid.get(d.id)?.has(d.id)) {
+        debugger;
+      }
+      trees.child2parentid.set(d.id, parentOfD);
+
+      // this id's parent can't be a leaf node
+      allIdsMinusParents.delete(parentOfD);
+    }
+
+    // handle folding
+    for (const leafId of allIdsMinusParents) {
+      const leaf = getGuaranteed(trees.id2status, leafId);
+      if (leaf.account.id === authorId) {
+        // Ah it's by author, so all ancestors should NOT BE FOLDED!
+        // start here and mark all parents as non-folding
+        let thisStatus = leaf;
+        while (thisStatus.in_reply_to_id) {
+          if (thisStatus.account.id !== authorId) {
+            trees.foldedIds.set(thisStatus.id, false);
+          }
+          const parentOfThis = getGuaranteed(
+            trees.id2status,
+            getGuaranteed(trees.child2parentid, thisStatus.id)
+          );
+          thisStatus = parentOfThis;
+        }
       } else {
-        // this has a parent
-        const hit = trees.parent2childid.get(s.in_reply_to_id) || new Set();
-        hit.add(s.id);
-        trees.parent2childid.set(s.in_reply_to_id, hit);
-        trees.child2parentid.set(s.id, s.in_reply_to_id);
-      }
-      trees.id2status.set(s.id, s);
-    }
-
-    // link the status up, since the above loop didn't include `status`
-    if (ancestors.length > 0) {
-      const parent = ancestors[ancestors.length - 1];
-      const hit = trees.parent2childid.get(parent.id) || new Set();
-      hit.add(status.id);
-      trees.parent2childid.set(parent.id, hit);
-      trees.child2parentid.set(status.id, parent.id);
-    }
-  }
-
-  // prune the trees
-  for (const [id, status] of trees.id2status.entries()) {
-    // we need all leaf nodes
-    const children = trees.parent2childid.get(id);
-    if (children && children.size > 0) {
-      continue;
-    }
-    // Ok this is a leaf node
-    // Might as well skip progenitors too
-    if (!status.in_reply_to_id) {
-      continue;
-    }
-
-    if (status.account.id === authorId) {
-      // Ah it's by author, so all ancestors should NOT BE FOLDED!
-      // start here and mark all parents as non-folding
-      let thisStatus = status;
-      while (thisStatus.in_reply_to_id) {
-        if (thisStatus.account.id !== authorId) {
-          trees.foldedIds.set(thisStatus.id, false);
+        // Ah this is not by author. Mark it and all subsequent (ancestor) non-author toots as folded.
+        // Then stop looking at the first author toot
+        let thisStatus = leaf;
+        while (
+          thisStatus.account.id !== authorId &&
+          thisStatus.in_reply_to_id
+        ) {
+          const hit = trees.foldedIds.get(thisStatus.id);
+          if (hit === undefined) {
+            trees.foldedIds.set(thisStatus.id, true);
+          } else {
+            // no need to keep walking up the tree, we've been here before
+            break;
+          }
+          const parentOfThis = getGuaranteed(
+            trees.id2status,
+            getGuaranteed(trees.child2parentid, thisStatus.id)
+          );
+          thisStatus = parentOfThis;
         }
-        const parentOfThis = getGuaranteed(
-          trees.id2status,
-          getGuaranteed(trees.child2parentid, thisStatus.id)
-        );
-        thisStatus = parentOfThis;
-      }
-    } else {
-      // Ah this is not by author. Mark it and all subsequent non-author toots as folded.
-      // Then stop looking at the first author toot
-      let thisStatus = status;
-      while (thisStatus.account.id !== authorId && thisStatus.in_reply_to_id) {
-        const hit = trees.foldedIds.get(thisStatus.id);
-        if (hit === undefined) {
-          trees.foldedIds.set(thisStatus.id, true);
-        } else {
-          // no need to keep walking up the tree, we've been here before
-          break;
-        }
-        const parentOfThis = getGuaranteed(
-          trees.id2status,
-          getGuaranteed(trees.child2parentid, thisStatus.id)
-        );
-        thisStatus = parentOfThis;
       }
     }
   }

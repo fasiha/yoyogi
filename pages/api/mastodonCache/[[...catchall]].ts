@@ -41,7 +41,7 @@ if (existsSync(CACHE_FILE_NAME)) {
 
 function updateCache(key: string, value: string) {
   cache[key] = value;
-  return writeFile(CACHE_FILE_NAME, JSON.stringify(cache))
+  return writeFile(CACHE_FILE_NAME, JSON.stringify(cache, null, 1))
 }
 
 export default async function handler(
