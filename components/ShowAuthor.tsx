@@ -14,7 +14,7 @@ export type Trees = {
   child2parentid: Map<string, string>;
   parent2childid: Map<string, Set<string>>;
   // For counting and display
-  // id2numDescendants: Map<string, { all: number; shown: number }>;
+  id2numDescendants: Map<string, { all: number; shown: number }>;
   maxContiguousId?: string;
   minContiguousId?: string;
 };
@@ -26,7 +26,7 @@ function initializeTrees(): Trees {
     id2status: new Map(),
     child2parentid: new Map(),
     parent2childid: new Map(),
-    // id2numDescendants: new Map(),
+    id2numDescendants: new Map(),
   };
 }
 
@@ -284,7 +284,31 @@ async function addStatusesToTreesImpure(
         }
       }
     }
+
+    // handle descendant counting
+    countDescendants(progenitor.id, trees);
   }
+}
+function sum(v: number[]) {
+  return v.length === 0 ? 0 : v.reduce((p, c) => p + c, 0);
+}
+function countDescendants(
+  id: string,
+  trees: Trees
+): { all: number; shown: number } {
+  const children = trees.parent2childid.get(id);
+  if (!children) {
+    const res = { all: 0, shown: 0 };
+    trees.id2numDescendants.set(id, res);
+    return res;
+  }
+  const shown = sum(Array.from(children, (id) => +!trees.foldedIds.get(id)));
+  const recur = Array.from(children, (id) => countDescendants(id, trees));
+  const sumAll = sum(recur.map((o) => o.all));
+  const sumShown = sum(recur.map((o) => o.shown));
+  const res = { all: children.size + sumAll, shown: shown + sumShown };
+  trees.id2numDescendants.set(id, res);
+  return res;
 }
 
 export function getGuaranteed<K, V>(m: Map<K, V>, key: K): V {

@@ -25,8 +25,15 @@ export interface ThreadProps {
   trees: Trees;
   authorId: string;
   depth: number;
+  siblingIdx?: number;
 }
-export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
+export function Thread({
+  progenitorId,
+  trees,
+  authorId,
+  depth,
+  siblingIdx,
+}: ThreadProps) {
   const progenitor = getGuaranteed(trees.id2status, progenitorId);
   const bullets: JSX.Element[] = [];
 
@@ -64,14 +71,14 @@ export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
         <li key={thisStatus.id}>
           {basicStatusToJsx(thisStatus)}
           {foldFooter}
-
-          {childrenToShow.map((s) => (
+          {childrenToShow.map((s, siblingIdx) => (
             <Thread
               key={s.id + "/" + depth}
               progenitorId={s.id}
               trees={trees}
               authorId={authorId}
               depth={depth + 1}
+              siblingIdx={siblingIdx + 1}
             />
           ))}
         </li>
@@ -79,11 +86,20 @@ export function Thread({ progenitorId, trees, authorId, depth }: ThreadProps) {
       thisStatus = undefined;
     }
   }
+
+  const siblings = trees.parent2childid.get(
+    trees.child2parentid.get(progenitor.id) ?? ""
+  );
+  const numSiblings = siblings ? siblings.size : 0;
+  const desc = getGuaranteed(trees.id2numDescendants, progenitor.id);
   return depth === 1 ? (
     <ol>{bullets}</ol>
   ) : (
     <details open>
-      <summary></summary>
+      <summary>
+        (Reply {siblingIdx ?? 0} of {numSiblings}, with total {desc.shown + 1}{" "}
+        toot{desc.shown ? "s" : ""})
+      </summary>
       <ol>{bullets}</ol>
     </details>
   );

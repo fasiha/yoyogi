@@ -18,3 +18,7 @@
 .all-threads ol {
   padding-left: 1em;
 }
+
+.all-threads summary {
+  margin-left: -1em;
+}
