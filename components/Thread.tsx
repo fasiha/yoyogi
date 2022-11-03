@@ -6,6 +6,9 @@ function statusToPlain(status: Entity.Status): string {
   return status.content.replace(/<.*?>/g, "");
 }
 function basicStatusToJsx(status: Entity.Status): JSX.Element {
+  if (status.reblog) {
+    return basicStatusToJsx(status.reblog);
+  }
   return (
     <>
       {status.account.username}: {statusToPlain(status)}{" "}
