@@ -22,3 +22,7 @@
 .all-threads summary {
   margin-left: -1em;
 }
+
+.all-threads li span p:first-child {
+  display: inline;
+}

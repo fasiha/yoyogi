@@ -1,17 +1,16 @@
 import { Entity, MegalodonInterface } from "megalodon";
 import { getGuaranteed, Trees } from "./ShowAuthor";
 import stylesAuthor from "../styles/ShowAuthor.module.css";
+import { Fragment } from "react";
 
-function statusToPlain(status: Entity.Status): string {
-  return status.content.replace(/<.*?>/g, "");
-}
 function basicStatusToJsx(status: Entity.Status): JSX.Element {
   if (status.reblog) {
     return basicStatusToJsx(status.reblog);
   }
   return (
     <>
-      {status.account.username}: {statusToPlain(status)}{" "}
+      {status.account.username}:{" "}
+      <span dangerouslySetInnerHTML={{ __html: status.content }}></span>{" "}
       <span className={stylesAuthor["supsub"]}>
         <sup>{status.created_at}</sup>
         <sub>{status.id}</sub>
