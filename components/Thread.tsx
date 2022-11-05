@@ -59,15 +59,15 @@ export function Thread({
     if (childrenToShow.length <= 1) {
       // either no children or just one child (straight-shot thread)
       bullets.push(
-        <li key={thisStatus.id}>
+        <div key={thisStatus.id} className={stylesAuthor["toot"]}>
           {basicStatusToJsx(thisStatus)}
           {foldFooter}
-        </li>
+        </div>
       );
       thisStatus = childrenToShow[0]; // might be undefined! ok! While guard above will work
     } else {
       bullets.push(
-        <li key={thisStatus.id}>
+        <div key={thisStatus.id} className={stylesAuthor["toot"]}>
           {basicStatusToJsx(thisStatus)}
           {foldFooter}
           {childrenToShow.map((s, siblingIdx) => (
@@ -80,7 +80,7 @@ export function Thread({
               siblingIdx={siblingIdx + 1}
             />
           ))}
-        </li>
+        </div>
       );
       thisStatus = undefined;
     }
@@ -92,16 +92,14 @@ export function Thread({
   const numSiblings = siblings ? siblings.size : 0;
   const desc = getGuaranteed(trees.id2numDescendants, progenitor.id);
   return depth === 1 ? (
-    <div className={stylesAuthor["thread"]}>
-      <ol>{bullets}</ol>
-    </div>
+    <div className={stylesAuthor["thread"]}>{bullets}</div>
   ) : (
     <details open className={stylesAuthor["thread"]}>
       <summary>
         (Reply {siblingIdx ?? 0} of {numSiblings}, with total {desc.shown + 1}{" "}
         toot{desc.shown ? "s" : ""})
       </summary>
-      <ol>{bullets}</ol>
+      {bullets}
     </details>
   );
 }

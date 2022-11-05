@@ -23,7 +23,7 @@
   margin-left: -1em;
 }
 
-.all-threads li span p:first-child {
+.all-threads .toot span p:first-child {
   display: inline;
 }
 
@@ -39,4 +39,16 @@
   width: 20em;
   overflow-wrap: break-word;
   overflow-y: scroll;
+}
+
+.thread .toot:first-child {
+  padding-top: 0;
+}
+.toot {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  border-bottom: 3px gray dotted;
+}
+.thread .toot:last-child {
+  border-bottom: none;
 }
