@@ -9,12 +9,10 @@ function basicStatusToJsx(status: Entity.Status): JSX.Element {
   }
   return (
     <>
-      {status.account.username}:{" "}
-      <span dangerouslySetInnerHTML={{ __html: status.content }}></span>{" "}
-      <span className={stylesAuthor["supsub"]}>
-        <sup>{status.created_at}</sup>
-        <sub>{status.id}</sub>
-      </span>
+      <a href={status.url} className={stylesAuthor["toot-author"]}>
+        {status.account.username}
+      </a>{" "}
+      <span dangerouslySetInnerHTML={{ __html: status.content }}></span>
     </>
   );
 }

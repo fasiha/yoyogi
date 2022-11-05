@@ -1,20 +1,3 @@
-/* Via https://stackoverflow.com/a/24908149 */
-.supsub {
-  display: inline-block;
-}
-
-.supsub sup,
-.supsub sub {
-  position: relative;
-  display: block;
-  font-size: 0.5em;
-  line-height: 1.2;
-}
-
-.supsub sub {
-  top: 0.3em;
-}
-
 .all-threads ol {
   padding-left: 1em;
 }
@@ -31,6 +14,7 @@
   display: flex;
   overflow-y: hidden;
   max-height: 100vh;
+  gap: 10px;
 }
 
 .all-threads > .thread {
@@ -39,6 +23,7 @@
   width: 20em;
   overflow-wrap: break-word;
   overflow-y: scroll;
+  padding-top: 0.5em;
 }
 
 .thread .toot:first-child {
@@ -51,4 +36,18 @@
 }
 .thread .toot:last-child {
   border-bottom: none;
+}
+
+.toot .toot-author {
+  border: 1px gray solid;
+  border-radius: 0.5em;
+  padding: 0.1em;
+}
+
+.button-bar {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+.button-bar button {
+  margin-left: 0.25em;
 }

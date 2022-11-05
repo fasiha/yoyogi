@@ -109,36 +109,38 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
 
   return (
     <div>
-      Showing {trees.progenitorIds.size ?? 0} thread
-      {trees.progenitorIds.size !== 1 && "s"} for @{account.username}!
-      <button
-        onClick={async () => {
-          setTrees(await newest(megalodon, account));
-        }}
-      >
-        Newest
-      </button>
-      <button
-        onClick={async () => {
-          setTrees(await newer(megalodon, account, trees, 1));
-        }}
-      >
-        Newer
-      </button>
-      <button
-        onClick={async () => {
-          setTrees(await older(megalodon, account, trees, 1));
-        }}
-      >
-        Older
-      </button>
-      <button
-        onClick={async () => {
-          setTrees(await oldest(megalodon, account));
-        }}
-      >
-        Oldest
-      </button>
+      <div className={styles["button-bar"]}>
+        Showing {trees.progenitorIds.size ?? 0} thread
+        {trees.progenitorIds.size !== 1 && "s"} for @{account.username}!
+        <button
+          onClick={async () => {
+            setTrees(await newest(megalodon, account));
+          }}
+        >
+          Newest
+        </button>
+        <button
+          onClick={async () => {
+            setTrees(await newer(megalodon, account, trees, 1));
+          }}
+        >
+          Newer
+        </button>
+        <button
+          onClick={async () => {
+            setTrees(await older(megalodon, account, trees, 1));
+          }}
+        >
+          Older
+        </button>
+        <button
+          onClick={async () => {
+            setTrees(await oldest(megalodon, account));
+          }}
+        >
+          Oldest
+        </button>
+      </div>
       <div className={styles["all-threads"]}>
         {Array.from(trees.progenitorIds)
           .sort((a, b) => b.localeCompare(a))
