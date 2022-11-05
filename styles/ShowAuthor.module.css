@@ -29,12 +29,14 @@
 
 .all-threads {
   display: flex;
+  overflow-y: hidden;
+  max-height: 100vh;
 }
 
 .all-threads > .thread {
   flex-grow: 1;
   flex-shrink: 0;
-  flex-basis: auto;
   width: 20em;
   overflow-wrap: break-word;
+  overflow-y: scroll;
 }
