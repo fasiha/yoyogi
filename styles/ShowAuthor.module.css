@@ -26,3 +26,15 @@
 .all-threads li span p:first-child {
   display: inline;
 }
+
+.all-threads {
+  display: flex;
+}
+
+.all-threads > .thread {
+  flex-grow: 1;
+  flex-shrink: 0;
+  flex-basis: auto;
+  width: 20em;
+  overflow-wrap: break-word;
+}

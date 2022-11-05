@@ -92,9 +92,11 @@ export function Thread({
   const numSiblings = siblings ? siblings.size : 0;
   const desc = getGuaranteed(trees.id2numDescendants, progenitor.id);
   return depth === 1 ? (
-    <ol>{bullets}</ol>
+    <div className={stylesAuthor["thread"]}>
+      <ol>{bullets}</ol>
+    </div>
   ) : (
-    <details open>
+    <details open className={stylesAuthor["thread"]}>
       <summary>
         (Reply {siblingIdx ?? 0} of {numSiblings}, with total {desc.shown + 1}{" "}
         toot{desc.shown ? "s" : ""})
