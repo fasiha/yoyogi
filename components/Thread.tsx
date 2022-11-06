@@ -12,7 +12,11 @@ function basicStatusToJsx(status: Entity.Status): JSX.Element {
       <a href={status.url} className={stylesAuthor["toot-author"]}>
         {status.account.username}
       </a>{" "}
-      <span dangerouslySetInnerHTML={{ __html: status.content }}></span>
+      <div
+        className={stylesAuthor["dangerous-content"]}
+        dangerouslySetInnerHTML={{ __html: status.content }}
+      ></div>{" "}
+      <div>{status.created_at}</div>
     </>
   );
 }
@@ -65,9 +69,11 @@ export function Thread({
       thisStatus = childrenToShow[0]; // might be undefined! ok! While guard above will work
     } else {
       bullets.push(
-        <div key={thisStatus.id} className={stylesAuthor["toot"]}>
-          {basicStatusToJsx(thisStatus)}
-          {foldFooter}
+        <>
+          <div key={thisStatus.id} className={stylesAuthor["toot"]}>
+            {basicStatusToJsx(thisStatus)}
+            {foldFooter}
+          </div>
           {childrenToShow.map((s, siblingIdx) => (
             <Thread
               key={s.id + "/" + depth}
@@ -78,7 +84,7 @@ export function Thread({
               siblingIdx={siblingIdx + 1}
             />
           ))}
-        </div>
+        </>
       );
       thisStatus = undefined;
     }
@@ -94,8 +100,8 @@ export function Thread({
   ) : (
     <details open className={stylesAuthor["thread"]}>
       <summary>
-        (Reply {siblingIdx ?? 0} of {numSiblings}, with total {desc.shown + 1}{" "}
-        toot{desc.shown ? "s" : ""})
+        (Depth {depth}. Reply {siblingIdx ?? 0} of {numSiblings}, with total{" "}
+        {desc.shown + 1} toot{desc.shown ? "s" : ""})
       </summary>
       {bullets}
     </details>

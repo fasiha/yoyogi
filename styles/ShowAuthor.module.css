@@ -1,15 +1,10 @@
-.all-threads ol {
-  padding-left: 1em;
-}
-
-.all-threads summary {
-  margin-left: -1em;
-}
-
-.all-threads .toot span p:first-child {
+.all-threads .toot .dangerous-content p:first-child {
   display: inline;
 }
 
+.dangerous-content {
+  display: inline;
+}
 .all-threads {
   display: flex;
   overflow-y: hidden;
@@ -26,18 +21,21 @@
   padding-top: 0.5em;
 }
 
-.thread .toot:first-child {
-  padding-top: 0;
+.thread summary {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  color: gray;
+  padding-left: 1em;
 }
+
 .toot {
   padding-top: 1em;
   padding-bottom: 1em;
   border-bottom: 3px gray dotted;
 }
-.thread .toot:last-child {
+.toot:last-child {
   border-bottom: none;
 }
-
 .toot .toot-author {
   border: 1px gray solid;
   border-radius: 0.5em;
