@@ -66,7 +66,11 @@ export function Thread({
     if (childrenToShow.length <= 1) {
       // either no children or just one child (straight-shot thread)
       bullets.push(
-        <div key={thisStatus.id} className={stylesAuthor["toot"]}>
+        <div
+          key={thisStatus.id}
+          className={stylesAuthor["toot"]}
+          id={thisStatus.id}
+        >
           {sections.join(".")}. {basicStatusToJsx(thisStatus)}
           {foldFooter}
         </div>
@@ -76,7 +80,11 @@ export function Thread({
     } else {
       bullets.push(
         <>
-          <div key={thisStatus.id} className={stylesAuthor["toot"]}>
+          <div
+            key={thisStatus.id}
+            className={stylesAuthor["toot"]}
+            id={thisStatus.id}
+          >
             {sections.join(".")}. {basicStatusToJsx(thisStatus)}
             {foldFooter}
           </div>
@@ -107,8 +115,10 @@ export function Thread({
   ) : (
     <details open className={stylesAuthor["thread"]}>
       <summary>
-        Repling to {sectionNumbersWithoutLast.join(".")} 👉 {siblingIdx ?? 0} of{" "}
-        {numSiblings} ({desc.shown + 1} toot
+        <a href={`#${progenitor.in_reply_to_id}`}>
+          {sectionNumbersWithoutLast.join(".")}
+        </a>
+        , reply #{siblingIdx ?? 0} of {numSiblings} ({desc.shown + 1} toot
         {desc.shown ? "s" : ""})
       </summary>
       {bullets}
