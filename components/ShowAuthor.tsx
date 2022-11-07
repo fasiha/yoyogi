@@ -2,7 +2,6 @@ import { Entity, MegalodonInterface } from "megalodon";
 import { useEffect, useState } from "react";
 import { Thread } from "./Thread";
 import styles from "../styles/ShowAuthor.module.css";
-import stylesParent from "../styles/components.module.css";
 
 export type Trees = {
   // Set to hold the toots starting threads (even of length 1), also indexed by ID (number)
@@ -156,17 +155,6 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
           ))}
       </div>
     </div>
-  );
-}
-
-function findAllDescsendants(
-  parent2child: Map<string, Set<string>>,
-  start: string
-): string[] {
-  const hit = parent2child.get(start);
-  if (!hit) return [start];
-  return [start].concat(
-    Array.from(hit).flatMap((child) => findAllDescsendants(parent2child, child))
   );
 }
 

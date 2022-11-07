@@ -1,6 +1,7 @@
 import generator, { Entity, MegalodonInterface, Response } from "megalodon";
 import { useState } from "react";
 import styles from "../styles/components.module.css";
+import { FollowsList } from "./FollowsList";
 import { ShowAuthor } from "./ShowAuthor";
 
 interface LoginProps {
@@ -76,11 +77,28 @@ async function verify(
     return undefined;
   }
 }
+
+async function getFollows(
+  megalodon: MegalodonInterface,
+  account: Entity.Account
+) {
+  const follows: Entity.Account[] = [];
+  try {
+    const followsResponse = await megalodon.getAccountFollowing(account.id);
+    console.log(followsResponse.headers);
+    follows.push(...followsResponse.data);
+  } catch (e) {
+    console.error("Network error:", e);
+  }
+  return follows;
+}
+
 export function Yoyogi() {
   const [megalodon, setMegalodon] = useState<MegalodonInterface | undefined>(
     undefined
   );
   const [account, setAccount] = useState<Entity.Account | undefined>(undefined);
+  const [follows, setFollows] = useState<Entity.Account[]>([]);
 
   const loggedIn = !!account && !!megalodon;
 
@@ -98,16 +116,22 @@ export function Yoyogi() {
       if (res) {
         setMegalodon(res.megalodon);
         setAccount(res.account);
+        {
+          setFollows(await getFollows(res.megalodon, res.account));
+        }
       }
     },
   };
   return (
-    <div>
+    <>
       <h1>Yoyogi</h1>
       <Login {...loginProps} />
       {account && megalodon && (
-        <ShowAuthor account={account} megalodon={megalodon} />
+        <div className={styles["follows-and-threads"]}>
+          <FollowsList follows={follows} />
+          <ShowAuthor account={account} megalodon={megalodon} />
+        </div>
       )}
-    </div>
+    </>
   );
 }
