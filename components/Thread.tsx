@@ -43,11 +43,7 @@ export function Thread({
   const bullets: JSX.Element[] = [];
 
   let thisStatus: Entity.Status | undefined = progenitor;
-  const sectionNumbersWithoutLast = sectionNumbers.slice(0, -1);
-  let lastSection = sectionNumbers[sectionNumbers.length - 1];
-  let finalStatusId = thisStatus.id;
   while (thisStatus) {
-    finalStatusId = thisStatus.id;
     const childrenOfThis: Entity.Status[] = Array.from(
       trees.parent2childid.get(thisStatus.id) || []
     ).map((s) => getGuaranteed(trees.id2status, s));
@@ -66,7 +62,6 @@ export function Thread({
       ""
     );
 
-    const sections = sectionNumbersWithoutLast.concat(lastSection);
     if (childrenToShow.length <= 1) {
       // either no children or just one child (straight-shot thread)
       bullets.push(
@@ -75,12 +70,11 @@ export function Thread({
           className={stylesAuthor["toot"]}
           id={thisStatus.id}
         >
-          {sections.join(".")}. {basicStatusToJsx(thisStatus)}
+          {basicStatusToJsx(thisStatus)}
           {foldFooter}
         </div>
       );
       thisStatus = childrenToShow[0]; // might be undefined! ok! While guard above will work
-      lastSection++;
     } else {
       bullets.push(
         <>
@@ -89,7 +83,7 @@ export function Thread({
             className={stylesAuthor["toot"]}
             id={thisStatus.id}
           >
-            {sections.join(".")}. {basicStatusToJsx(thisStatus)}
+            {basicStatusToJsx(thisStatus)}
             {foldFooter}
           </div>
           {childrenToShow.map((s, siblingIdx) => (
@@ -100,7 +94,7 @@ export function Thread({
               authorId={authorId}
               depth={depth + 1}
               siblingIdx={siblingIdx + 1}
-              sectionNumbers={sections.concat(siblingIdx + 1)}
+              sectionNumbers={sectionNumbers.concat(siblingIdx + 1)}
             />
           ))}
         </>
@@ -138,11 +132,10 @@ export function Thread({
       id={"collapsible-" + progenitor.id}
     >
       <summary>
-        <a href={`#${progenitor.in_reply_to_id}`}>
-          👆 {sectionNumbersWithoutLast.join(".")}
-        </a>
-        , reply #{siblingIdx ?? 0} of {numSiblings} ({desc.shown + 1} toot
-        {desc.shown ? "s" : ""}) {goLeft} {goRight}
+        §{sectionNumbers.join(".")}, reply #{siblingIdx ?? 0} of {numSiblings} (
+        {desc.shown + 1} toot
+        {desc.shown ? "s" : ""}){" "}
+        <a href={`#${progenitor.in_reply_to_id}`}>👆</a> {goLeft} {goRight}
       </summary>
       {bullets}
     </details>
