@@ -16,7 +16,9 @@ function basicStatusToJsx(status: Entity.Status): JSX.Element {
         className={stylesAuthor["dangerous-content"]}
         dangerouslySetInnerHTML={{ __html: status.content }}
       ></div>{" "}
-      <div>{status.created_at}</div>
+      <div>
+        {status.created_at} {status.id}
+      </div>
     </>
   );
 }
@@ -43,13 +45,15 @@ export function Thread({
   let thisStatus: Entity.Status | undefined = progenitor;
   const sectionNumbersWithoutLast = sectionNumbers.slice(0, -1);
   let lastSection = sectionNumbers[sectionNumbers.length - 1];
+  let finalStatusId = thisStatus.id;
   while (thisStatus) {
+    finalStatusId = thisStatus.id;
     const childrenOfThis: Entity.Status[] = Array.from(
       trees.parent2childid.get(thisStatus.id) || []
     ).map((s) => getGuaranteed(trees.id2status, s));
-    const childrenToShow = childrenOfThis.filter(
-      (s) => trees.foldedIds.get(s.id) !== true
-    );
+    const childrenToShow = childrenOfThis
+      .filter((s) => trees.foldedIds.get(s.id) !== true)
+      .sort((a, b) => a.id.localeCompare(b.id));
     const numFoldedChildren = childrenOfThis.length - childrenToShow.length;
 
     const foldFooter = numFoldedChildren ? (
@@ -110,16 +114,35 @@ export function Thread({
   );
   const numSiblings = siblings ? siblings.size : 0;
   const desc = getGuaranteed(trees.id2numDescendants, progenitor.id);
-  return depth === 1 ? (
-    <div className={stylesAuthor["thread"]}>{bullets}</div>
-  ) : (
-    <details open className={stylesAuthor["thread"]}>
+  if (depth === 1) {
+    return <div className={stylesAuthor["thread"]}>{bullets}</div>;
+  }
+
+  const siblingIds = Array.from(siblings || []).sort(); //lexical sort is usually going to be ok
+  const goLeft =
+    siblingIdx && siblingIdx > 1 ? (
+      <a href={`#collapsible-${siblingIds[siblingIdx - 1 - 1]}`}>👈</a>
+    ) : (
+      ""
+    );
+  const goRight =
+    siblingIdx && siblingIdx < numSiblings ? (
+      <a href={`#collapsible-${siblingIds[siblingIdx + 1 - 1]}`}>👉</a>
+    ) : (
+      ""
+    );
+  return (
+    <details
+      open
+      className={stylesAuthor["thread"]}
+      id={"collapsible-" + progenitor.id}
+    >
       <summary>
         <a href={`#${progenitor.in_reply_to_id}`}>
-          {sectionNumbersWithoutLast.join(".")}
+          👆 {sectionNumbersWithoutLast.join(".")}
         </a>
         , reply #{siblingIdx ?? 0} of {numSiblings} ({desc.shown + 1} toot
-        {desc.shown ? "s" : ""})
+        {desc.shown ? "s" : ""}) {goLeft} {goRight}
       </summary>
       {bullets}
     </details>
