@@ -167,10 +167,10 @@ Optimizations include:
 ## More plans
 Yoyogi now has oldest/newest and older/newer. Let's fill in more of its features for an MVP/SLC (minimum viable product/simple lovable and complete).
 
-- Switch between any of logged-in users' follows
-- Track which posts have been read/unread (pretend all toots before first login are "read"; use localStorage or IndexedDb)
-- Horizontal scroll for older/newer threads, vertical scroll for within-thread.
-- Make `newest` (and I guess `oldest`) not reset the threads but check if they need to.
-- add links
+- [ ] Switch between any of logged-in users' follows
+- [ ] Track which posts have been read/unread (pretend all toots before first login are "read"; use localStorage or IndexedDb)
+- [x] Horizontal scroll for older/newer threads, vertical scroll for within-thread.
+- [ ] Make `newest` (and I guess `oldest`) not reset the threads but check if they need to.
+- [ ] add links
 
 That'll be good enough for a client-side-only version. Based on feedback, invest in a hosted solution that allows users to use the app between devices.
