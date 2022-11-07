@@ -151,6 +151,7 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
               progenitorId={id}
               authorId={account.id}
               depth={1}
+              sectionNumbers={[1]}
             />
           ))}
       </div>

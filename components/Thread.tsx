@@ -27,6 +27,7 @@ export interface ThreadProps {
   authorId: string;
   depth: number;
   siblingIdx?: number;
+  sectionNumbers: number[];
 }
 export function Thread({
   progenitorId,
@@ -34,11 +35,14 @@ export function Thread({
   authorId,
   depth,
   siblingIdx,
+  sectionNumbers,
 }: ThreadProps) {
   const progenitor = getGuaranteed(trees.id2status, progenitorId);
   const bullets: JSX.Element[] = [];
 
   let thisStatus: Entity.Status | undefined = progenitor;
+  const sectionNumbersWithoutLast = sectionNumbers.slice(0, -1);
+  let lastSection = sectionNumbers[sectionNumbers.length - 1];
   while (thisStatus) {
     const childrenOfThis: Entity.Status[] = Array.from(
       trees.parent2childid.get(thisStatus.id) || []
@@ -58,20 +62,22 @@ export function Thread({
       ""
     );
 
+    const sections = sectionNumbersWithoutLast.concat(lastSection);
     if (childrenToShow.length <= 1) {
       // either no children or just one child (straight-shot thread)
       bullets.push(
         <div key={thisStatus.id} className={stylesAuthor["toot"]}>
-          {basicStatusToJsx(thisStatus)}
+          {sections.join(".")}. {basicStatusToJsx(thisStatus)}
           {foldFooter}
         </div>
       );
       thisStatus = childrenToShow[0]; // might be undefined! ok! While guard above will work
+      lastSection++;
     } else {
       bullets.push(
         <>
           <div key={thisStatus.id} className={stylesAuthor["toot"]}>
-            {basicStatusToJsx(thisStatus)}
+            {sections.join(".")}. {basicStatusToJsx(thisStatus)}
             {foldFooter}
           </div>
           {childrenToShow.map((s, siblingIdx) => (
@@ -82,6 +88,7 @@ export function Thread({
               authorId={authorId}
               depth={depth + 1}
               siblingIdx={siblingIdx + 1}
+              sectionNumbers={sections.concat(siblingIdx + 1)}
             />
           ))}
         </>
@@ -100,8 +107,9 @@ export function Thread({
   ) : (
     <details open className={stylesAuthor["thread"]}>
       <summary>
-        (Depth {depth}. Reply {siblingIdx ?? 0} of {numSiblings}, with total{" "}
-        {desc.shown + 1} toot{desc.shown ? "s" : ""})
+        Repling to {sectionNumbersWithoutLast.join(".")} 👉 {siblingIdx ?? 0} of{" "}
+        {numSiblings} ({desc.shown + 1} toot
+        {desc.shown ? "s" : ""})
       </summary>
       {bullets}
     </details>
