@@ -23,6 +23,28 @@ function basicStatusToJsx(status: Entity.Status): JSX.Element {
   );
 }
 
+function sortStatuses(v: Entity.Status[], authorId: string) {
+  return v.sort((a, b) => {
+    if (a.account.id === b.account.id) {
+      return a.created_at.localeCompare(b.created_at);
+    }
+    // They're different authors
+    if (a.account.id === authorId) {
+      return -1;
+    }
+    if (b.account.id === authorId) {
+      return 1;
+    }
+    return a.created_at.localeCompare(b.created_at);
+  });
+}
+function sortStatusIds(v: string[], authorId: string, trees: Trees) {
+  return sortStatuses(
+    v.map((i) => getGuaranteed(trees.id2status, i)),
+    authorId
+  );
+}
+
 export interface ThreadProps {
   progenitorId: string;
   trees: Trees;
@@ -47,9 +69,10 @@ export function Thread({
     const childrenOfThis: Entity.Status[] = Array.from(
       trees.parent2childid.get(thisStatus.id) || []
     ).map((s) => getGuaranteed(trees.id2status, s));
-    const childrenToShow = childrenOfThis
-      .filter((s) => trees.foldedIds.get(s.id) !== true)
-      .sort((a, b) => a.id.localeCompare(b.id));
+    const childrenToShow = sortStatuses(
+      childrenOfThis.filter((s) => trees.foldedIds.get(s.id) !== true),
+      authorId
+    );
     const numFoldedChildren = childrenOfThis.length - childrenToShow.length;
 
     const foldFooter = numFoldedChildren ? (
@@ -112,7 +135,7 @@ export function Thread({
     return <div className={stylesAuthor["thread"]}>{bullets}</div>;
   }
 
-  const siblingIds = Array.from(siblings || []).sort(); //lexical sort is usually going to be ok
+  const siblingIds = sortStatusIds(Array.from(siblings || []), authorId, trees);
   const goLeft =
     siblingIdx && siblingIdx > 1 ? (
       <a href={`#collapsible-${siblingIds[siblingIdx - 1 - 1]}`}>👈</a>
