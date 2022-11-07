@@ -100,7 +100,7 @@ export function Thread({
       thisStatus = childrenToShow[0]; // might be undefined! ok! While guard above will work
     } else {
       bullets.push(
-        <>
+        <Fragment key={thisStatus.id}>
           <div
             key={thisStatus.id}
             className={stylesAuthor["toot"]}
@@ -120,7 +120,7 @@ export function Thread({
               sectionNumbers={sectionNumbers.concat(siblingIdx + 1)}
             />
           ))}
-        </>
+        </Fragment>
       );
       thisStatus = undefined;
     }
