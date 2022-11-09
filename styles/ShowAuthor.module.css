@@ -19,7 +19,6 @@
   width: 20em;
   overflow-wrap: break-word;
   overflow-y: scroll;
-  padding-top: 0.5em;
 }
 
 .thread summary {
