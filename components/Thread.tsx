@@ -3,20 +3,26 @@ import { getGuaranteed, Trees } from "./ShowAuthor";
 import stylesAuthor from "../styles/ShowAuthor.module.css";
 import { Fragment } from "react";
 
+function isoTimestampToNice(s: string) {
+  return new Date(s).toUTCString();
+}
 function basicStatusToJsx(status: Entity.Status): JSX.Element {
   if (status.reblog) {
     return basicStatusToJsx(status.reblog);
   }
   return (
     <>
-      <a href={status.url} className={stylesAuthor["toot-author"]}>
+      <a
+        title={"Go to original: " + isoTimestampToNice(status.created_at)}
+        href={status.url}
+        className={stylesAuthor["toot-author"]}
+      >
         {status.account.username}
       </a>{" "}
       <div
         className={stylesAuthor["dangerous-content"]}
         dangerouslySetInnerHTML={{ __html: status.content }}
       ></div>{" "}
-      <div>{status.created_at}</div>
     </>
   );
 }
@@ -136,13 +142,23 @@ export function Thread({
   const siblingIds = sortStatusIds(Array.from(siblings || []), authorId, trees);
   const goLeft =
     siblingIdx && siblingIdx > 1 ? (
-      <a href={`#collapsible-${siblingIds[siblingIdx - 1 - 1]}`}>👈</a>
+      <a
+        href={`#collapsible-${siblingIds[siblingIdx - 1 - 1]}`}
+        title="Previous sub-thread"
+      >
+        👈
+      </a>
     ) : (
       ""
     );
   const goRight =
     siblingIdx && siblingIdx < numSiblings ? (
-      <a href={`#collapsible-${siblingIds[siblingIdx + 1 - 1]}`}>👉</a>
+      <a
+        href={`#collapsible-${siblingIds[siblingIdx + 1 - 1]}`}
+        title="Next sub-thread"
+      >
+        👉
+      </a>
     ) : (
       ""
     );
@@ -156,7 +172,13 @@ export function Thread({
         §{sectionNumbers.join(".")}, reply #{siblingIdx ?? 0} of {numSiblings} (
         {desc.shown + 1} toot
         {desc.shown ? "s" : ""}){" "}
-        <a href={`#${progenitor.in_reply_to_id}`}>👆</a> {goLeft} {goRight}
+        <a
+          href={`#${progenitor.in_reply_to_id}`}
+          title="Jump to parent of sub-thread"
+        >
+          👆
+        </a>{" "}
+        {goLeft} {goRight}
       </summary>
       {bullets}
     </details>
