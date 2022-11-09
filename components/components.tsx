@@ -132,6 +132,7 @@ export function Yoyogi() {
           <FollowsList
             myAccount={account}
             follows={follows}
+            authorId={author.id}
             setAuthor={setAuthor}
           />
           <ShowAuthor account={author} megalodon={megalodon} />
