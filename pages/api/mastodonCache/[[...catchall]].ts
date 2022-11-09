@@ -21,14 +21,14 @@ server during testing this ridiculous app.
 */
 
 
-import {existsSync, readFileSync} from 'fs'
-import {writeFile} from 'fs/promises'
+import {existsSync, readFileSync, writeFileSync} from 'fs'
 import {NextApiRequest, NextApiResponse} from 'next'
 import fetch from 'node-fetch';
 
 const MASTODON = process.env.MASTODON || 'https://octodon.social';
 const CACHE_FILE_NAME = 'mastodon-cache.json';
 
+const localUrl = 'http://localhost:3000/api/mastodonCache';
 let cache: Record<string, string> = {};
 
 if (existsSync(CACHE_FILE_NAME)) {
@@ -41,7 +41,11 @@ if (existsSync(CACHE_FILE_NAME)) {
 
 function updateCache(key: string, value: string) {
   cache[key] = value;
-  return writeFile(CACHE_FILE_NAME, JSON.stringify(cache, null, 1))
+  writeFileSync(CACHE_FILE_NAME, JSON.stringify(cache, null, 1))
+}
+
+function urlToLinkHeaderKey(url: string) {
+  return url + '___header-link'
 }
 
 export default async function handler(
@@ -63,6 +67,10 @@ export default async function handler(
     const hit = cache[url];
     console.log(`Cache found ${hit.length}-long entry for ${externalUrl}`)
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
+    const linkHeader = cache[urlToLinkHeaderKey(url)];
+    if (linkHeader) {
+      res.setHeader('Link', linkHeader)
+    }
     res.status(200).write(hit)
     res.end()
     return
@@ -81,7 +89,13 @@ export default async function handler(
       console.log(`Remote fetch ok, ${
           text.length} bytes received. Saving to cache and returning to client.`)
       updateCache(url, text)
-      res.setHeader('Content-Type', 'application/json; charset=utf-8')
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      const linkHeader = externalRequest.headers.get('link')
+      if (linkHeader) {
+        updateCache(
+            urlToLinkHeaderKey(url), linkHeader.replaceAll(MASTODON, localUrl));
+        res.setHeader('Link', linkHeader)
+      }
       res.status(200).write(text)
       res.end()
       return

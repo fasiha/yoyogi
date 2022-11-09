@@ -1,5 +1,6 @@
 import generator, { Entity, MegalodonInterface, Response } from "megalodon";
 import { useState } from "react";
+import parseLinkHeader from "parse-link-header";
 import styles from "../styles/components.module.css";
 import { FollowsList } from "./FollowsList";
 import { ShowAuthor } from "./ShowAuthor";
@@ -84,8 +85,9 @@ async function getFollows(
 ) {
   const follows: Entity.Account[] = [];
   try {
-    const followsResponse = await megalodon.getAccountFollowing(account.id);
-    console.log(followsResponse.headers);
+    const followsResponse = await megalodon.getAccountFollowing(account.id, {
+      get_all: true,
+    });
     follows.push(...followsResponse.data);
   } catch (e) {
     console.error("Network error:", e);

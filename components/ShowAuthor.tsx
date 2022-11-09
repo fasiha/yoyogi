@@ -201,10 +201,17 @@ async function addStatusesToTreesImpure(
     // these `getStatusContext`s should really be in try/catch
 
     // find the progenitor, get all its descendants
-    const progenitor = s.in_reply_to_id
-      ? (await megalodon.getStatusContext(s.id, { max_id: s.id })).data
-          .ancestors[0]
-      : s;
+    let progenitor: Entity.Status;
+    if (s.in_reply_to_id) {
+      const req = await megalodon.getStatusContext(s.id, { max_id: s.id });
+      progenitor = req.data.ancestors[0];
+      if (!progenitor) {
+        // this might happen if the server hasn't yet fetched a copy of the parent?
+        progenitor = s;
+      }
+    } else {
+      progenitor = s;
+    }
     trees.progenitorIds.add(progenitor.id);
 
     const data = (await megalodon.getStatusContext(progenitor.id)).data;
@@ -242,15 +249,13 @@ async function addStatusesToTreesImpure(
       if (leaf.account.id === authorId) {
         // Ah it's by author, so all ancestors should NOT BE FOLDED!
         // start here and mark all parents as non-folding
-        let thisStatus = leaf;
-        while (thisStatus.in_reply_to_id) {
+        let thisStatus: Entity.Status | undefined = leaf;
+        while (thisStatus?.in_reply_to_id) {
           if (thisStatus.account.id !== authorId) {
             trees.foldedIds.set(thisStatus.id, false);
           }
-          const parentOfThis = getGuaranteed(
-            trees.id2status,
-            getGuaranteed(trees.child2parentid, thisStatus.id)
-          );
+          // a status might have a `in_reply_to_id` but the server might not have gotten it
+          const parentOfThis = trees.id2status.get(thisStatus.in_reply_to_id);
           thisStatus = parentOfThis;
         }
       } else {
