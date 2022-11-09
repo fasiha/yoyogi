@@ -35,7 +35,7 @@ async function newest(
   account: Entity.Account
 ): Promise<Trees> {
   const trees = initializeTrees();
-  const res = await megalodon.getAccountStatuses(account.id);
+  const res = await megalodon.getAccountStatuses(account.id, { limit: 5 });
   await addStatusesToTreesImpure(trees, res.data, megalodon, account.id);
   return trees;
 }
@@ -44,7 +44,10 @@ async function oldest(
   account: Entity.Account
 ): Promise<Trees> {
   const trees = initializeTrees();
-  const res = await megalodon.getAccountStatuses(account.id, { min_id: "0" });
+  const res = await megalodon.getAccountStatuses(account.id, {
+    min_id: "0",
+    limit: 5,
+  });
   await addStatusesToTreesImpure(trees, res.data, megalodon, account.id);
   return trees;
 }
@@ -101,7 +104,6 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
   // Save to global
   useEffect(() => {
     (window as any).trees = trees;
-    console.log("saved trees to global");
   }, [trees]);
 
   return (
