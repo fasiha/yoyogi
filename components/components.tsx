@@ -1,6 +1,5 @@
-import generator, { Entity, MegalodonInterface, Response } from "megalodon";
+import generator, { Entity, MegalodonInterface } from "megalodon";
 import { useState } from "react";
-import parseLinkHeader from "parse-link-header";
 import styles from "../styles/components.module.css";
 import { FollowsList } from "./FollowsList";
 import { ShowAuthor } from "./ShowAuthor";

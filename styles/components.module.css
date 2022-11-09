@@ -4,3 +4,16 @@
 .login-box input {
   margin-left: 0.5em;
 }
+
+.follows-and-threads {
+  display: flex;
+}
+
+.follows-list {
+  width: 20em;
+  height: 100vh;
+  overflow-wrap: break-word;
+  overflow-y: scroll;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
