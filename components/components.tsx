@@ -100,6 +100,7 @@ export function Yoyogi() {
   );
   const [account, setAccount] = useState<Entity.Account | undefined>(undefined);
   const [follows, setFollows] = useState<Entity.Account[]>([]);
+  const [author, setAuthor] = useState<Entity.Account | undefined>(undefined);
 
   const loggedIn = !!account && !!megalodon;
 
@@ -117,9 +118,8 @@ export function Yoyogi() {
       if (res) {
         setMegalodon(res.megalodon);
         setAccount(res.account);
-        {
-          setFollows(await getFollows(res.megalodon, res.account));
-        }
+        setAuthor(res.account);
+        setFollows(await getFollows(res.megalodon, res.account));
       }
     },
   };
@@ -127,10 +127,14 @@ export function Yoyogi() {
     <>
       <h1>Yoyogi</h1>
       <Login {...loginProps} />
-      {account && megalodon && (
+      {account && megalodon && author && (
         <div className={styles["follows-and-threads"]}>
-          <FollowsList follows={follows} />
-          <ShowAuthor account={account} megalodon={megalodon} />
+          <FollowsList
+            myAccount={account}
+            follows={follows}
+            setAuthor={setAuthor}
+          />
+          <ShowAuthor account={author} megalodon={megalodon} />
         </div>
       )}
     </>

@@ -93,17 +93,15 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
   const [trees, setTrees] = useState(() => initializeTrees());
   // initial populate for this account
   useEffect(() => {
-    if (trees.id2status.size) {
-      return;
-    }
     (async function () {
       const trees = await newest(megalodon, account);
       setTrees(trees);
     })();
-  }, [megalodon, account, trees.id2status.size]);
+  }, [megalodon, account]);
   // Save to global
   useEffect(() => {
     (window as any).trees = trees;
+    console.log("saved trees to global");
   }, [trees]);
 
   return (
@@ -261,10 +259,10 @@ async function addStatusesToTreesImpure(
       } else {
         // Ah this is not by author. Mark it and all subsequent (ancestor) non-author toots as folded.
         // Then stop looking at the first author toot
-        let thisStatus = leaf;
+        let thisStatus: Entity.Status | undefined = leaf;
         while (
-          thisStatus.account.id !== authorId &&
-          thisStatus.in_reply_to_id
+          thisStatus?.account.id !== authorId &&
+          thisStatus?.in_reply_to_id
         ) {
           const hit = trees.foldedIds.get(thisStatus.id);
           if (hit === undefined) {
@@ -273,10 +271,7 @@ async function addStatusesToTreesImpure(
             // no need to keep walking up the tree, we've been here before
             break;
           }
-          const parentOfThis = getGuaranteed(
-            trees.id2status,
-            getGuaranteed(trees.child2parentid, thisStatus.id)
-          );
+          const parentOfThis = trees.id2status.get(thisStatus.in_reply_to_id);
           thisStatus = parentOfThis;
         }
       }
