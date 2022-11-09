@@ -16,9 +16,7 @@ function basicStatusToJsx(status: Entity.Status): JSX.Element {
         className={stylesAuthor["dangerous-content"]}
         dangerouslySetInnerHTML={{ __html: status.content }}
       ></div>{" "}
-      <div>
-        {status.created_at} {status.id}
-      </div>
+      <div>{status.created_at}</div>
     </>
   );
 }
