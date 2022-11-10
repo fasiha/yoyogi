@@ -1,14 +1,14 @@
 import Head from "next/head";
-import { Yoyogi } from "../components/components";
+import Link from "next/link";
 
-export default function Home() {
+export default function About() {
   return (
     <div>
       <Head>
-        <title>Yoyogi</title>
+        <title>About Yoyogi</title>
         <meta
           name="description"
-          content="Yoyogi: a Mastodon reader for folks who hate The Timeline"
+          content="About Yoyogi (the Mastodon reader for folks who hate The Timeline)"
         />
         <link
           rel="icon"
@@ -17,7 +17,9 @@ export default function Home() {
       </Head>
 
       <main>
-        <Yoyogi />
+        <h1>
+          About <Link href="/">Yoyogi</Link>
+        </h1>
       </main>
     </div>
   );

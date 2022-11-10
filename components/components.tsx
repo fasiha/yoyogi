@@ -1,5 +1,6 @@
 import generator, { Entity, MegalodonInterface } from "megalodon";
 import { useState } from "react";
+import Link from "next/link";
 import styles from "../styles/components.module.css";
 import { FollowsList } from "./FollowsList";
 import { ShowAuthor } from "./ShowAuthor";
@@ -125,7 +126,12 @@ export function Yoyogi() {
   };
   return (
     <>
-      <h1>Yoyogi</h1>
+      <h1>
+        Yoyogi{" "}
+        <sup>
+          <Link href="/about">About</Link>
+        </sup>
+      </h1>
       <Login {...loginProps} />
       {account && megalodon && author && (
         <div className={styles["follows-and-threads"]}>
