@@ -7,12 +7,11 @@ import { ShowAuthor } from "./ShowAuthor";
 
 interface LoginProps {
   loggedIn: boolean;
-  submit: (url: string, token: string) => void;
-  logout: () => void;
+  submit: (url: string) => void;
+  switchServer: () => void;
 }
-function Login({ loggedIn, submit, logout }: LoginProps) {
+function Login({ loggedIn, submit, switchServer }: LoginProps) {
   const [url, setUrl] = useState("");
-  const [token, setToken] = useState("");
   return (
     <div className={styles["login-box"]}>
       {loggedIn ? (
@@ -20,12 +19,20 @@ function Login({ loggedIn, submit, logout }: LoginProps) {
           Logged into {url}.{" "}
           <button
             onClick={() => {
-              logout();
+              switchServer();
               setUrl("");
-              setToken("");
             }}
           >
             Log out
+          </button>{" "}
+          <button
+            onClick={() => {
+              switchServer();
+              setUrl("");
+              localStorage.clear();
+            }}
+          >
+            Logout and clear local data
           </button>
         </>
       ) : (
@@ -39,16 +46,7 @@ function Login({ loggedIn, submit, logout }: LoginProps) {
               value={url}
             />
           </label>
-          <label>
-            Token?
-            <input
-              type="password"
-              placeholder="token"
-              onChange={(e) => setToken(e.target.value)}
-              value={token}
-            />
-          </label>
-          <button onClick={() => submit(url, token)}>Submit</button>
+          <button onClick={() => submit(url)}>Submit</button>
         </>
       )}
     </div>
@@ -62,6 +60,86 @@ function removeTrailingSlashes(url: string) {
   }
   return url;
 }
+
+interface AppRegisterInfo {
+  client_id: string;
+  client_secret: string;
+  authUrl: string; // this is the URL for the user to get their code
+  version: number;
+}
+interface TokenInfo {
+  serverUrl: string;
+  token: string;
+  version: number;
+}
+
+function urlToTokenLocalStorageKey(url: string) {
+  return "yoyogi-" + url;
+}
+async function registerApp(
+  megalodon: MegalodonInterface
+): Promise<AppRegisterInfo> {
+  const yoyogiRegistration = await megalodon.registerApp("Yoyogi", {
+    scopes: ["read", "push"],
+    website: "https://fasiha.github.io/yoyogi",
+    redirect_uris: "urn:ietf:wg:oauth:2.0:oob",
+  });
+  return {
+    version: 1,
+    client_id: yoyogiRegistration.client_id,
+    client_secret: yoyogiRegistration.client_secret,
+    authUrl: yoyogiRegistration.url || "",
+  };
+}
+async function register(url: string) {
+  const megalodon = generator("mastodon", url);
+  const localStorageKey = urlToTokenLocalStorageKey(url);
+
+  const raw = localStorage.getItem(localStorageKey);
+  if (raw) {
+    try {
+      const tokenInfo = JSON.parse(raw);
+      if (tokenInfo.token) {
+        // don't need to register or get token
+        return verify(url, tokenInfo.token);
+      }
+    } catch {
+      // failed to parse JSON? continue
+    }
+  } else {
+    // nothing in localStorage? continue
+  }
+  const regInfo = await registerApp(megalodon);
+
+  if (!regInfo.authUrl) {
+    console.error("no URL");
+    return;
+  }
+  window.alert(
+    `I'm going to open a new tab to Mastodon. Log in, copy the key, and return here with it.`
+  );
+  window.open(regInfo.authUrl, "_blank");
+  const code = window.prompt("Enter Mastodon key") || "";
+
+  const token = await megalodon.fetchAccessToken(
+    regInfo.client_id,
+    regInfo.client_secret,
+    code
+  );
+
+  const tokenInfo: TokenInfo = {
+    version: 1,
+    serverUrl: url,
+    token: token.access_token,
+  };
+  localStorage.setItem(
+    urlToTokenLocalStorageKey(url),
+    JSON.stringify(tokenInfo)
+  );
+
+  return verify(url, token.access_token);
+}
+
 async function verify(
   url: string,
   token: string
@@ -112,10 +190,10 @@ export function Yoyogi() {
 
   const loginProps: LoginProps = {
     loggedIn,
-    logout,
-    submit: async (enteredUrl: string, enteredToken: string) => {
+    switchServer: logout,
+    submit: async (enteredUrl: string) => {
       enteredUrl = removeTrailingSlashes(enteredUrl);
-      const res = await verify(enteredUrl, enteredToken);
+      const res = await register(enteredUrl);
       if (res) {
         setMegalodon(res.megalodon);
         setAccount(res.account);
