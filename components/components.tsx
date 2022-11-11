@@ -34,15 +34,6 @@ function Login({ loggedIn, submit, switchServer }: LoginProps) {
           >
             Log out
           </button>{" "}
-          <button
-            onClick={() => {
-              switchServer();
-              setUrl("");
-              localStorage.clear();
-            }}
-          >
-            Logout and clear local data
-          </button>
         </>
       ) : (
         <>
@@ -78,6 +69,15 @@ function Login({ loggedIn, submit, switchServer }: LoginProps) {
             />
           </label>{" "}
           <button onClick={() => submit(url)}>Submit</button>
+          <button
+            onClick={() => {
+              switchServer();
+              setUrl("");
+              localStorage.clear();
+            }}
+          >
+            Clear local data
+          </button>
         </>
       )}
     </div>
