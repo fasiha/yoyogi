@@ -21,7 +21,9 @@ export function FollowsList({
             className={f.id === authorId ? styles["selected-author"] : ""}
           >
             @{f.acct} {f.display_name}{" "}
-            <button onClick={() => setAuthor(f)}>Select</button>
+            {f.id !== authorId && (
+              <button onClick={() => setAuthor(f)}>Select</button>
+            )}
           </li>
         ))}
       </ol>
