@@ -39,7 +39,7 @@ function Login({ loggedIn, submit, switchServer }: LoginProps) {
         <>
           {urls.length && (
             <label htmlFor="server-select">
-              Log into old server?{" "}
+              Log in again?{" "}
               <select
                 id="server-select"
                 onChange={(e) => {

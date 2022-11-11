@@ -216,10 +216,6 @@ async function addStatusesToTreesImpure(
     const descendants = data.descendants;
     // will this have a limit? Do we have to recurse with `max_id`?
 
-    // this set will eventually contain just leaf nodes
-    const allIdsMinusParents = new Set<string>(descendants.map((s) => s.id));
-    allIdsMinusParents.add(progenitor.id);
-
     trees.id2status.set(progenitor.id, progenitor);
     for (const d of descendants) {
       trees.id2status.set(d.id, d);
@@ -236,71 +232,52 @@ async function addStatusesToTreesImpure(
         debugger;
       }
       trees.child2parentid.set(d.id, parentOfD);
-
-      // this id's parent can't be a leaf node
-      allIdsMinusParents.delete(parentOfD);
     }
 
-    // handle folding
-    for (const leafId of allIdsMinusParents) {
-      const leaf = getGuaranteed(trees.id2status, leafId);
-      if (leaf.account.id === authorId) {
-        // Ah it's by author, so all ancestors should NOT BE FOLDED!
-        // start here and mark all parents as non-folding
-        let thisStatus: Entity.Status | undefined = leaf;
-        while (thisStatus?.in_reply_to_id) {
-          if (thisStatus.account.id !== authorId) {
-            trees.foldedIds.set(thisStatus.id, false);
-          }
-          // a status might have a `in_reply_to_id` but the server might not have gotten it
-          const parentOfThis = trees.id2status.get(thisStatus.in_reply_to_id);
-          thisStatus = parentOfThis;
-        }
-      } else {
-        // Ah this is not by author. Mark it and all subsequent (ancestor) non-author toots as folded.
-        // Then stop looking at the first author toot
-        let thisStatus: Entity.Status | undefined = leaf;
-        while (
-          thisStatus?.account.id !== authorId &&
-          thisStatus?.in_reply_to_id
-        ) {
-          const hit = trees.foldedIds.get(thisStatus.id);
-          if (hit === undefined) {
-            trees.foldedIds.set(thisStatus.id, true);
-          } else {
-            // no need to keep walking up the tree, we've been here before
-            break;
-          }
-          const parentOfThis = trees.id2status.get(thisStatus.in_reply_to_id);
-          thisStatus = parentOfThis;
-        }
-      }
-    }
-
-    // handle descendant counting
-    countDescendants(progenitor.id, trees);
+    // handle descendant counting and folding
+    traverseFromTop(progenitor.id, trees, authorId);
   }
 }
 function sum(v: number[]) {
   return v.length === 0 ? 0 : v.reduce((p, c) => p + c, 0);
 }
-function countDescendants(
+/**
+ * Count each status's # of descendants, and whether it's "folded".
+ * A status is "folded" if it and all its descendants are not by the author.
+ */
+function traverseFromTop(
   id: string,
-  trees: Trees
-): { all: number; shown: number } {
+  trees: Trees,
+  authorId: string
+): { all: number; shown: number; authorFound: boolean } {
   const children = trees.parent2childid.get(id);
   if (!children) {
-    const res = { all: 0, shown: 0 };
-    trees.id2numDescendants.set(id, res);
-    return res;
+    const all = 0;
+    const shown = 0;
+    const authorFound = trees.id2status.get(id)?.account.id === authorId;
+
+    trees.id2numDescendants.set(id, { all, shown });
+    trees.foldedIds.set(id, !authorFound);
+
+    return { all, shown, authorFound };
   }
-  const shown = sum(Array.from(children, (id) => +!trees.foldedIds.get(id)));
-  const recur = Array.from(children, (id) => countDescendants(id, trees));
+  const recur = Array.from(children, (id) =>
+    traverseFromTop(id, trees, authorId)
+  );
   const sumAll = sum(recur.map((o) => o.all));
   const sumShown = sum(recur.map((o) => o.shown));
-  const res = { all: children.size + sumAll, shown: shown + sumShown };
-  trees.id2numDescendants.set(id, res);
-  return res;
+  // combine descendants with this status
+  const authorFound =
+    recur.some((o) => o.authorFound) ||
+    trees.id2status.get(id)?.account.id === authorId;
+  const all = children.size + sumAll;
+  const shown =
+    sum(Array.from(children, (id) => +!trees.foldedIds.get(id))) + sumShown;
+
+  trees.id2numDescendants.set(id, { all, shown });
+  trees.foldedIds.set(id, !authorFound);
+
+  return { all, shown, authorFound };
 }
 
 export function getGuaranteed<K, V>(m: Map<K, V>, key: K): V {
