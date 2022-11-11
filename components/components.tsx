@@ -1,5 +1,5 @@
 import generator, { Entity, MegalodonInterface } from "megalodon";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "../styles/components.module.css";
 import { FollowsList } from "./FollowsList";
@@ -10,8 +10,17 @@ interface LoginProps {
   submit: (url: string) => void;
   switchServer: () => void;
 }
+
 function Login({ loggedIn, submit, switchServer }: LoginProps) {
   const [url, setUrl] = useState("");
+  const [urls, setUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!url) {
+      setUrls(getYoyogiUrls());
+    }
+  }, [url]);
+
   return (
     <div className={styles["login-box"]}>
       {loggedIn ? (
@@ -37,15 +46,37 @@ function Login({ loggedIn, submit, switchServer }: LoginProps) {
         </>
       ) : (
         <>
-          <label>
-            Mastodon URL?
+          {urls.length && (
+            <label htmlFor="server-select">
+              Log into old server?{" "}
+              <select
+                id="server-select"
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  submit(e.target.value);
+                }}
+              >
+                <option value="" key="">
+                  --Pick one of {urls.length} saved servers--
+                </option>
+                {urls.map((url) => (
+                  <option value={url} key={url}>
+                    {url}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label htmlFor="url-input">
+            Enter new Mastodon URL?
             <input
+              id="url-input"
               type="url"
               placeholder="https://octodon.social"
               onChange={(e) => setUrl(e.target.value)}
               value={url}
             />
-          </label>
+          </label>{" "}
           <button onClick={() => submit(url)}>Submit</button>
         </>
       )}
@@ -67,15 +98,6 @@ interface AppRegisterInfo {
   authUrl: string; // this is the URL for the user to get their code
   version: number;
 }
-interface TokenInfo {
-  serverUrl: string;
-  token: string;
-  version: number;
-}
-
-function urlToTokenLocalStorageKey(url: string) {
-  return "yoyogi-" + url;
-}
 async function registerApp(
   megalodon: MegalodonInterface
 ): Promise<AppRegisterInfo> {
@@ -93,22 +115,14 @@ async function registerApp(
 }
 async function register(url: string) {
   const megalodon = generator("mastodon", url);
-  const localStorageKey = urlToTokenLocalStorageKey(url);
 
-  const raw = localStorage.getItem(localStorageKey);
-  if (raw) {
-    try {
-      const tokenInfo = JSON.parse(raw);
-      if (tokenInfo.token) {
-        // don't need to register or get token
-        return verify(url, tokenInfo.token);
-      }
-    } catch {
-      // failed to parse JSON? continue
-    }
-  } else {
-    // nothing in localStorage? continue
+  const tokenInfo = getUrlToken(url);
+  if (tokenInfo) {
+    // don't need to register or get token, we have it already
+    return verify(url, tokenInfo.token);
   }
+
+  // register app
   const regInfo = await registerApp(megalodon);
 
   if (!regInfo.authUrl) {
@@ -121,23 +135,18 @@ async function register(url: string) {
   window.open(regInfo.authUrl, "_blank");
   const code = window.prompt("Enter Mastodon key") || "";
 
-  const token = await megalodon.fetchAccessToken(
-    regInfo.client_id,
-    regInfo.client_secret,
-    code
-  );
-
-  const tokenInfo: TokenInfo = {
-    version: 1,
-    serverUrl: url,
-    token: token.access_token,
-  };
-  localStorage.setItem(
-    urlToTokenLocalStorageKey(url),
-    JSON.stringify(tokenInfo)
-  );
-
-  return verify(url, token.access_token);
+  try {
+    const token = await megalodon.fetchAccessToken(
+      regInfo.client_id,
+      regInfo.client_secret,
+      code
+    );
+    addNewUrlToken(url, token.access_token);
+    return verify(url, token.access_token);
+  } catch {
+    alert(`That didn't work. Try again?`);
+    return;
+  }
 }
 
 async function verify(
@@ -224,4 +233,76 @@ export function Yoyogi() {
       )}
     </>
   );
+}
+
+///
+export interface YoyogiUrls {
+  version: number;
+  urls: string[];
+}
+
+interface TokenInfo {
+  serverUrl: string;
+  token: string;
+  version: number;
+}
+
+function urlToTokenLocalStorageKey(url: string) {
+  return "yoyogi-" + url;
+}
+
+const YOYOGI_URLS_KEY = "yoyogi-urls";
+function getYoyogiUrls(): string[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+  const raw = localStorage.getItem(YOYOGI_URLS_KEY);
+  if (!raw) {
+    return [];
+  }
+  try {
+    const urlsObj: YoyogiUrls = JSON.parse(raw);
+    return urlsObj.urls;
+  } catch {
+    return [];
+  }
+}
+
+function addNewUrlToken(url: string, token: string) {
+  const urls = getYoyogiUrls();
+  const newPayload: YoyogiUrls = {
+    version: 1,
+    urls: urls.filter((u) => u !== url).concat(url),
+  };
+  localStorage.setItem(YOYOGI_URLS_KEY, JSON.stringify(newPayload));
+
+  const tokenInfo: TokenInfo = {
+    version: 1,
+    serverUrl: url,
+    token,
+  };
+  localStorage.setItem(
+    urlToTokenLocalStorageKey(url),
+    JSON.stringify(tokenInfo)
+  );
+}
+
+function getUrlToken(url: string) {
+  const localStorageKey = urlToTokenLocalStorageKey(url);
+
+  const raw = localStorage.getItem(localStorageKey);
+  if (raw) {
+    try {
+      const tokenInfo: TokenInfo = JSON.parse(raw);
+      if (tokenInfo.token) {
+        // don't need to register or get token
+        return tokenInfo;
+      }
+    } catch {
+      // failed to parse JSON
+    }
+  } else {
+    // nothing in localStorage
+  }
+  return undefined;
 }
