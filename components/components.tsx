@@ -37,7 +37,7 @@ function Login({ loggedIn, submit, switchServer }: LoginProps) {
         </>
       ) : (
         <>
-          {urls.length && (
+          {urls.length ? (
             <label htmlFor="server-select">
               Log in again?{" "}
               <select
@@ -57,6 +57,8 @@ function Login({ loggedIn, submit, switchServer }: LoginProps) {
                 ))}
               </select>
             </label>
+          ) : (
+            ""
           )}
           <label htmlFor="url-input">
             Enter new Mastodon URL?
