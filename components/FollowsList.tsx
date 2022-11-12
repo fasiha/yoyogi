@@ -14,7 +14,7 @@ export function FollowsList({
 }: FollowsListProps) {
   return (
     <div className={styles["follows-list"]}>
-      <ol start={0}>
+      <ol start={follows.length + 1} reversed>
         {[myAccount].concat(follows).map((f) => (
           <li
             key={f.id}
