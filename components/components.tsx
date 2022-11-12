@@ -4,15 +4,18 @@ import Link from "next/link";
 import styles from "../styles/components.module.css";
 import { FollowsList } from "./FollowsList";
 import { ShowAuthor } from "./ShowAuthor";
+import { useRouter } from "next/router";
 
+const LOCALSTORAGE_REG_KEY = "yoyogi-registration";
 interface LoginProps {
+  initialUrl: string;
   loggedIn: boolean;
   submit: (url: string) => void;
   switchServer: () => void;
 }
 
-function Login({ loggedIn, submit, switchServer }: LoginProps) {
-  const [url, setUrl] = useState("");
+function Login({ initialUrl, loggedIn, submit, switchServer }: LoginProps) {
+  const [url, setUrl] = useState(initialUrl);
   const [urls, setUrls] = useState<string[]>([]);
 
   useEffect(() => {
@@ -20,6 +23,9 @@ function Login({ loggedIn, submit, switchServer }: LoginProps) {
       setUrls(getYoyogiUrls());
     }
   }, [url]);
+  useEffect(() => {
+    setUrl(initialUrl);
+  }, [initialUrl]);
 
   return (
     <div className={styles["login-box"]}>
@@ -60,22 +66,31 @@ function Login({ loggedIn, submit, switchServer }: LoginProps) {
           ) : (
             ""
           )}
-          <label htmlFor="url-input">
-            Enter new Mastodon URL?
-            <input
-              id="url-input"
-              type="url"
-              placeholder="https://octodon.social"
-              onChange={(e) => setUrl(e.target.value)}
-              value={url}
-            />
-          </label>{" "}
-          <button onClick={() => submit(url)}>Submit</button>
+          <form
+            style={{ display: "inline" }}
+            onSubmit={(e) => {
+              submit(url);
+              e.preventDefault();
+            }}
+          >
+            <label htmlFor="url-input">
+              Enter new Mastodon URL?
+              <input
+                id="url-input"
+                type="url"
+                placeholder="https://octodon.social"
+                onChange={(e) => setUrl(e.target.value)}
+                value={url}
+              />
+            </label>
+          </form>{" "}
+          <button onClick={() => submit(url)}>Submit</button>{" "}
           <button
             onClick={() => {
               switchServer();
               setUrl("");
               localStorage.clear();
+              setUrls(getYoyogiUrls());
             }}
           >
             Clear local data
@@ -93,29 +108,33 @@ function removeTrailingSlashes(url: string) {
   }
   return url;
 }
-
+const REDIRECT_URL = () =>
+  removeTrailingSlashes(window.location.origin + window.location.pathname);
 interface AppRegisterInfo {
+  url: string;
   client_id: string;
   client_secret: string;
   authUrl: string; // this is the URL for the user to get their code
   version: number;
 }
 async function registerApp(
+  url: string,
   megalodon: MegalodonInterface
 ): Promise<AppRegisterInfo> {
   const yoyogiRegistration = await megalodon.registerApp("Yoyogi", {
     scopes: ["read", "push"],
     website: "https://fasiha.github.io/yoyogi",
-    redirect_uris: "urn:ietf:wg:oauth:2.0:oob",
+    redirect_uris: REDIRECT_URL(),
   });
   return {
+    url,
     version: 1,
     client_id: yoyogiRegistration.client_id,
     client_secret: yoyogiRegistration.client_secret,
     authUrl: yoyogiRegistration.url || "",
   };
 }
-async function register(url: string) {
+async function register1(url: string) {
   const megalodon = generator("mastodon", url);
 
   const tokenInfo = getUrlToken(url);
@@ -125,30 +144,28 @@ async function register(url: string) {
   }
 
   // register app
-  const regInfo = await registerApp(megalodon);
+  const regInfo = await registerApp(url, megalodon);
 
   if (!regInfo.authUrl) {
     console.error("no URL");
     return;
   }
-  window.alert(
-    `I'm going to open a new tab to Mastodon. Log in, copy the key, and return here with it.`
-  );
-  window.open(regInfo.authUrl, "_blank");
-  const code = window.prompt("Enter Mastodon key") || "";
 
-  try {
-    const token = await megalodon.fetchAccessToken(
-      regInfo.client_id,
-      regInfo.client_secret,
-      code
-    );
-    addNewUrlToken(url, token.access_token);
-    return verify(url, token.access_token);
-  } catch {
-    alert(`That didn't work. Try again?`);
-    return;
-  }
+  localStorage.setItem(LOCALSTORAGE_REG_KEY, JSON.stringify(regInfo));
+
+  window.open(regInfo.authUrl, "_self");
+}
+async function register2(regInfo: AppRegisterInfo, code: string) {
+  const megalodon = generator("mastodon", regInfo.url);
+  const token = await megalodon.fetchAccessToken(
+    regInfo.client_id,
+    regInfo.client_secret,
+    code,
+    REDIRECT_URL()
+  );
+  console.log("got token");
+  addNewUrlToken(regInfo.url, token.access_token);
+  return verify(regInfo.url, token.access_token);
 }
 
 async function verify(
@@ -191,6 +208,42 @@ export function Yoyogi() {
   const [account, setAccount] = useState<Entity.Account | undefined>(undefined);
   const [follows, setFollows] = useState<Entity.Account[]>([]);
   const [author, setAuthor] = useState<Entity.Account | undefined>(undefined);
+  const [initialUrl, setInitialUrl] = useState("");
+
+  const router = useRouter();
+  useEffect(() => {
+    (async function main() {
+      const code = new URL("" + window.location).searchParams.get("code");
+      if (code) {
+        const raw = localStorage.getItem(LOCALSTORAGE_REG_KEY);
+        if (!raw) {
+          console.error("received a code in URL but no registration");
+          window.location.search = "";
+          return;
+        }
+        try {
+          const regInfo: AppRegisterInfo = JSON.parse(raw);
+          const res = await register2(regInfo, code);
+          if (res) {
+            setInitialUrl(regInfo.url);
+            setMegalodon(res.megalodon);
+            setAccount(res.account);
+            setAuthor(res.account);
+            setFollows(await getFollows(res.megalodon, res.account));
+            localStorage.removeItem(LOCALSTORAGE_REG_KEY);
+            router.push("/", undefined, { shallow: true });
+            return;
+          } else {
+            console.error("unable to verify");
+          }
+        } catch (e) {
+          // JSON parse error, registration error
+          console.error("registration finalization error", e);
+          localStorage.removeItem(LOCALSTORAGE_REG_KEY);
+        }
+      }
+    })();
+  }, [router]);
 
   const loggedIn = !!account && !!megalodon;
 
@@ -201,10 +254,11 @@ export function Yoyogi() {
 
   const loginProps: LoginProps = {
     loggedIn,
+    initialUrl,
     switchServer: logout,
     submit: async (enteredUrl: string) => {
       enteredUrl = removeTrailingSlashes(enteredUrl);
-      const res = await register(enteredUrl);
+      const res = await register1(enteredUrl);
       if (res) {
         setMegalodon(res.megalodon);
         setAccount(res.account);
