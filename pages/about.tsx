@@ -21,7 +21,9 @@ export default function About() {
           About <Link href="/">Yoyogi</Link>
         </h1>
         <section>
-          <h2>Here’s my burning secret.</h2>
+          <h2 id="heres-my-burning-secret">
+            <a href="#heres-my-burning-secret">Here’s my burning secret.</a>
+          </h2>
           <p style={{ fontSize: "x-large" }}>I hate the timeline.</p>
           <p>
             I <em>love</em> following tons of people, I getting windows into
@@ -64,14 +66,17 @@ export default function About() {
             <Link href="/">Try it</Link>!
           </p>
         </section>
-        <h2>How it works</h2>
+        <h2 id="how-it-works">
+          <a href="#how-it-works">How it works</a>
+        </h2>
         <section>
           <p>
-            Yoyogi runs all its code in your browser. There is <em>no</em>{" "}
-            “Yoyogi server” that talks to your Mastodon server on your behalf.
-            Your browser loads Yoyogi code from this Yoyogi website and uses it
-            to talk to your Fediverse server. So there’s still the concept of
-            “logging into” your server. So.
+            So right now Yoyogi runs all its code in your browser (like{" "}
+            <a href="https://pinafore.social/">Pinafore</a>). There is no
+            “Yoyogi server”: rather your browser talks to your Fediverse
+            server—and I never see any of your data. But you do have to get your
+            Fediverse server to talk to your browser, so there’s still the
+            concept of logging in:
           </p>
           <ol>
             <li>
@@ -79,18 +84,61 @@ export default function About() {
               <code>https://octodon.social</code> and click “Submit”.
             </li>
             <li>
-              Yoyogi opens a new browser tab to that server, which after
-              ascertaining you’re logged in, will ask you, “Hey, this Yoyogi
-              thing wants to have permission to read what you can read (no
-              writing/changing), that ok?” Assuming you trust me, you say
-              “Authorize”.
+              Yoyogi sends you to that server, which after ascertaining you’re
+              logged in, will ask you, “Hey, this Yoyogi thing wants to have
+              permission to read what you can read (no writing/changing), that
+              ok?”
             </li>
-            <li>
-              Your server will give you a long string of random characters. You
-              copy that and paste it into your Yoyogi tab.
-            </li>
+            <li>Assuming you trust me, you say “Authorize”.</li>
+            <li>Mastodon sends you back to Yoyogi and you can get started!</li>
           </ol>
           <p></p>
+        </section>
+        <section>
+          <h2 id="anticipated-questions">
+            <a href="#anticipated-questions">Anticipated questions</a>
+          </h2>
+          <p>
+            <strong>Why does it look so terrible?</strong> Yoyogi is just barely
+            in the MVP (minimum viable product) stage. I don’t know if it’s{" "}
+            <a href="https://blog.asmartbear.com/slc.html">SLC</a> (simple,
+            lovable, complete) yet.
+          </p>
+          <p>
+            <strong>Why is it lacking &lt;important feature&gt;?</strong> See
+            above.
+          </p>
+          <p>
+            <strong>What features are next?</strong> Great question.
+          </p>
+          <ol>
+            <li>
+              My mental image for Yoyogi is frankly Google Reader. I’d love it
+              if it kept track of how many unread toots I have from each of my
+              follows.
+            </li>
+            <li>Of course I need to add media (images and video).</li>
+            <li>Toggle boosts.</li>
+          </ol>
+          <p>
+            <strong>
+              Will it ever have a mode to <em>write</em> posts?
+            </strong>{" "}
+            No I don’t think so. Posting for me is a totally different mental
+            activity than reading/catching up. It’s in fact <em>two</em> mental
+            activities:
+          </p>
+          <ol>
+            <li>
+              quick conversations—the timeline is actually great for this, so
+              I’d switch back to a “normal” Mastodon or Misskey or Pleroma or
+              Pinafore app; and
+            </li>
+            <li>
+              Zen-mode composing toots and threads. This I often do in a proper
+              document writing app (my journaling app, a notes app, etc.).
+            </li>
+          </ol>
         </section>
       </main>
     </div>
