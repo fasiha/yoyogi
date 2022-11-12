@@ -3,22 +3,37 @@ import { getGuaranteed, Trees } from "./ShowAuthor";
 import styles from "../styles/components.module.css";
 import { Fragment } from "react";
 
+const fmt = Intl.DateTimeFormat(undefined, {
+  dateStyle: "short",
+  timeStyle: "short",
+  hourCycle: "h23",
+});
 function isoTimestampToNice(s: string) {
-  return new Date(s).toUTCString();
+  return fmt.format(new Date(s));
 }
-function basicStatusToJsx(status: Entity.Status): JSX.Element {
+function basicStatusToJsx(status: Entity.Status, footer = ""): JSX.Element {
   if (status.reblog) {
     return basicStatusToJsx(status.reblog);
   }
   return (
     <>
-      <a
-        title={"Go to original: " + isoTimestampToNice(status.created_at)}
-        href={status.url}
-        className={styles["toot-author"]}
-      >
-        {status.account.username}
-      </a>{" "}
+      <p>
+        <a
+          title={"Go to original"}
+          href={status.url}
+          className={styles["toot-author"]}
+        >
+          {status.account.username}
+        </a>
+        {footer ? (
+          <span className={styles["supsub"]}>
+            <sup>{isoTimestampToNice(status.created_at)}</sup>
+            <sub>{footer}</sub>
+          </span>
+        ) : (
+          <sup>{isoTimestampToNice(status.created_at)}</sup>
+        )}
+      </p>
       <div
         className={styles["dangerous-content"]}
         dangerouslySetInnerHTML={{ __html: status.content }}
@@ -79,22 +94,17 @@ export function Thread({
     );
     const numFoldedChildren = childrenOfThis.length - childrenToShow.length;
 
-    const foldFooter = numFoldedChildren ? (
-      <sub>
-        {" "}
-        {numFoldedChildren} hidden{" "}
-        {numFoldedChildren === 1 ? "reply" : "replies"}
-      </sub>
-    ) : (
-      ""
-    );
+    const foldFooter = numFoldedChildren
+      ? `${numFoldedChildren} hidden ${
+          numFoldedChildren === 1 ? "reply" : "replies"
+        }`
+      : "";
 
     if (childrenToShow.length <= 1) {
       // either no children or just one child (straight-shot thread)
       bullets.push(
         <div key={thisStatus.id} className={styles["toot"]} id={thisStatus.id}>
-          {basicStatusToJsx(thisStatus)}
-          {foldFooter}
+          {basicStatusToJsx(thisStatus, foldFooter)}
         </div>
       );
       thisStatus = childrenToShow[0]; // might be undefined! ok! While guard above will work
@@ -106,8 +116,7 @@ export function Thread({
             className={styles["toot"]}
             id={thisStatus.id}
           >
-            {basicStatusToJsx(thisStatus)}
-            {foldFooter}
+            {basicStatusToJsx(thisStatus, foldFooter)}
           </div>
           {childrenToShow.map((s, siblingIdx) => (
             <Thread
