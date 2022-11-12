@@ -114,6 +114,28 @@ export default function About() {
             lovable, complete) yet.
           </p>
           <p>
+            <strong>Why is it so slow?</strong> Largely due to my not hiding
+            network latency better—we could definitely be showing you toots and
+            threads faster, and showing a spinner when we have nothing. But in
+            some way, this usage pattern is not well-supported by the Mastodon
+            server API at least, which expects you to read a few toots at a time{" "}
+            <em>in temporal order</em>, rather than whole threads at a time.
+            What Yoyogi does is, it takes a chunk of temporally-contiguous toots
+            (one network call) and builds the thread around each (one network
+            call <em>per</em> toot), dramatically increasing the work done.
+            There are various technical solutions to this (caching, smarter
+            database/API layer), which is partly why I haven’t even tried
+            reaching for the low-hanging fruit (that’s a lie, mostly it’s
+            because I’m lazy).
+          </p>
+          <p>
+            Also note that we’re not saving any toots locally in your browser
+            yet. That would make it much faster when you keep up with an author
+            regularly (not much to fetch from the server), but wouldn’t help
+            much if you’re at all like me and sometimes days go by without
+            checking in with some folks.
+          </p>
+          <p>
             <strong>Why is it lacking &lt;important feature&gt;?</strong> See
             above.
           </p>
