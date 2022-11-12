@@ -6,14 +6,19 @@
 }
 
 .follows-and-threads {
+  overflow-wrap: break-word;
+
   display: flex;
+  overflow-y: hidden;
+  gap: 10px;
+
+  grid-column: 1 / 3;
 }
 
 .follows-list {
-  /* width: 20em; */
-  /* height: 100vh; */
-  overflow-wrap: break-word;
   overflow-y: scroll;
+  min-width: 20em;
+  /* height: 100vh; */
   /* flex-grow: 0; */
   /* flex-shrink: 0; */
 }
@@ -31,4 +36,56 @@ main.griddy-main {
   grid-template-columns: 20vw 80vw;
   grid-template-rows: auto minmax(0, 1fr);
   max-height: 100vh;
+}
+
+/* ?/// */
+
+.follows-and-threads .toot .dangerous-content p:first-child {
+  display: inline;
+}
+
+.dangerous-content {
+  display: inline;
+}
+.follows-and-threads {
+  display: flex;
+  overflow-y: hidden;
+  gap: 10px;
+}
+
+.follows-and-threads > .thread {
+  flex-grow: 1;
+  flex-shrink: 0;
+  width: 20em;
+  overflow-wrap: break-word;
+  overflow-y: scroll;
+}
+
+.thread summary {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  color: gray;
+  padding-left: 1em;
+}
+
+.toot {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  border-bottom: 3px gray dotted;
+}
+.toot:last-child {
+  border-bottom: none;
+}
+.toot .toot-author {
+  border: 1px gray solid;
+  border-radius: 0.5em;
+  padding: 0.1em;
+}
+
+.button-bar {
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+}
+.button-bar button {
+  margin-left: 0.25em;
 }

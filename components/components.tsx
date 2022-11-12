@@ -280,7 +280,7 @@ export function Yoyogi() {
       </h1>
       <Login {...loginProps} />
       {account && megalodon && author && (
-        <>
+        <div className={styles["follows-and-threads"]}>
           <FollowsList
             myAccount={account}
             follows={follows}
@@ -288,7 +288,7 @@ export function Yoyogi() {
             setAuthor={setAuthor}
           />
           <ShowAuthor account={author} megalodon={megalodon} />
-        </>
+        </div>
       )}
     </main>
   );

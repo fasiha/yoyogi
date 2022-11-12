@@ -1,6 +1,6 @@
 import { Entity, MegalodonInterface } from "megalodon";
 import { getGuaranteed, Trees } from "./ShowAuthor";
-import stylesAuthor from "../styles/ShowAuthor.module.css";
+import styles from "../styles/components.module.css";
 import { Fragment } from "react";
 
 function isoTimestampToNice(s: string) {
@@ -15,12 +15,12 @@ function basicStatusToJsx(status: Entity.Status): JSX.Element {
       <a
         title={"Go to original: " + isoTimestampToNice(status.created_at)}
         href={status.url}
-        className={stylesAuthor["toot-author"]}
+        className={styles["toot-author"]}
       >
         {status.account.username}
       </a>{" "}
       <div
-        className={stylesAuthor["dangerous-content"]}
+        className={styles["dangerous-content"]}
         dangerouslySetInnerHTML={{ __html: status.content }}
       ></div>{" "}
     </>
@@ -92,11 +92,7 @@ export function Thread({
     if (childrenToShow.length <= 1) {
       // either no children or just one child (straight-shot thread)
       bullets.push(
-        <div
-          key={thisStatus.id}
-          className={stylesAuthor["toot"]}
-          id={thisStatus.id}
-        >
+        <div key={thisStatus.id} className={styles["toot"]} id={thisStatus.id}>
           {basicStatusToJsx(thisStatus)}
           {foldFooter}
         </div>
@@ -107,7 +103,7 @@ export function Thread({
         <Fragment key={thisStatus.id}>
           <div
             key={thisStatus.id}
-            className={stylesAuthor["toot"]}
+            className={styles["toot"]}
             id={thisStatus.id}
           >
             {basicStatusToJsx(thisStatus)}
@@ -136,7 +132,7 @@ export function Thread({
   const numSiblings = siblings ? siblings.size : 0;
   const desc = getGuaranteed(trees.id2numDescendants, progenitor.id);
   if (depth === 1) {
-    return <div className={stylesAuthor["thread"]}>{bullets}</div>;
+    return <div className={styles["thread"]}>{bullets}</div>;
   }
 
   const siblingIds = sortStatusIds(Array.from(siblings || []), authorId, trees);
@@ -165,7 +161,7 @@ export function Thread({
   return (
     <details
       open
-      className={stylesAuthor["thread"]}
+      className={styles["thread"]}
       id={"collapsible-" + progenitor.id}
     >
       <summary>

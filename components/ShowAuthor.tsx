@@ -1,7 +1,7 @@
 import { Entity, MegalodonInterface } from "megalodon";
 import { useEffect, useState } from "react";
 import { Thread } from "./Thread";
-import styles from "../styles/ShowAuthor.module.css";
+import styles from "../styles/components.module.css";
 
 export type Trees = {
   // Set to hold the toots starting threads (even of length 1), also indexed by ID (number)
@@ -107,7 +107,7 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
   }, [trees]);
 
   return (
-    <div className={styles["all-threads"]}>
+    <>
       <div className={styles["button-bar"]}>
         <button
           onClick={async () => {
@@ -152,7 +152,7 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
           Oldest
         </button>
       </div>
-    </div>
+    </>
   );
 }
 
