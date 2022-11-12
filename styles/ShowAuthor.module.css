@@ -7,9 +7,7 @@
 }
 .all-threads {
   display: flex;
-  flex: 1; /* be wide, to the right of the follows list */
   overflow-y: hidden;
-  max-height: 100vh;
   gap: 10px;
 }
 

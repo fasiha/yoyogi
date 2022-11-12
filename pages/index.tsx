@@ -16,9 +16,7 @@ export default function Home() {
         ></link>
       </Head>
 
-      <main>
-        <Yoyogi />
-      </main>
+      <Yoyogi />
     </div>
   );
 }
