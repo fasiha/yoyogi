@@ -1,6 +1,18 @@
 import Head from "next/head";
 import Link from "next/link";
 
+interface LinkedH2Props {
+  text: string;
+  slug: string;
+}
+function LinkedH2({ text, slug }: LinkedH2Props) {
+  return (
+    <h2 id={slug}>
+      <a href={slug}>§</a> {text}
+    </h2>
+  );
+}
+
 export default function About() {
   return (
     <div>
@@ -21,9 +33,10 @@ export default function About() {
           About <Link href="/">Yoyogi</Link>
         </h1>
         <section>
-          <h2 id="heres-my-burning-secret">
-            <a href="#heres-my-burning-secret">Here’s my burning secret.</a>
-          </h2>
+          <LinkedH2
+            slug="heres-my-burning-secret"
+            text="Here’s my burning secret."
+          />
           <p style={{ fontSize: "x-large" }}>I hate the timeline.</p>
           <p>
             I <em>love</em> following tons of people, I getting windows into
@@ -66,9 +79,7 @@ export default function About() {
             <Link href="/">Try it</Link>!
           </p>
         </section>
-        <h2 id="how-it-works">
-          <a href="#how-it-works">How it works</a>
-        </h2>
+        <LinkedH2 slug="how-it-works" text="How it works" />
         <section>
           <p>
             So right now Yoyogi runs all its code in your browser (like{" "}
@@ -95,9 +106,7 @@ export default function About() {
           <p></p>
         </section>
         <section>
-          <h2 id="anticipated-questions">
-            <a href="#anticipated-questions">Anticipated questions</a>
-          </h2>
+          <LinkedH2 slug="anticipated-questions" text="Anticipated questions" />
           <p>
             <strong>Why does it look so terrible?</strong> Yoyogi is just barely
             in the MVP (minimum viable product) stage. I don’t know if it’s{" "}

@@ -19,5 +19,9 @@
 }
 
 .selected-author {
-  background-color: gray;
+  font-weight: bold;
+}
+
+.selected-author::after {
+  content: " ✅";
 }
