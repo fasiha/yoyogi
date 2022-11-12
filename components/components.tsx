@@ -6,6 +6,7 @@ import { FollowsList } from "./FollowsList";
 import { ShowAuthor } from "./ShowAuthor";
 import { useRouter } from "next/router";
 
+const LINK_PREFIX = process.env.NEXT_PUBLIC_ASSET_PREFIX || "";
 const LOCALSTORAGE_REG_KEY = "yoyogi-registration";
 interface LoginProps {
   initialUrl: string;
@@ -272,7 +273,9 @@ export function Yoyogi() {
       <h1>
         Yoyogi{" "}
         <sup>
-          <Link href="/about">About</Link>
+          <Link href="/about" as={LINK_PREFIX + "/about"}>
+            About
+          </Link>
         </sup>
       </h1>
       <Login {...loginProps} />

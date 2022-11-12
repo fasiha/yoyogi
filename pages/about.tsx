@@ -1,6 +1,8 @@
 import Head from "next/head";
 import Link from "next/link";
 
+const LINK_PREFIX = process.env.NEXT_PUBLIC_ASSET_PREFIX || "";
+
 interface LinkedH2Props {
   text: string;
   slug: string;
@@ -30,7 +32,10 @@ export default function About() {
 
       <main>
         <h1>
-          About <Link href="/">Yoyogi</Link>
+          About{" "}
+          <Link href="/" as={LINK_PREFIX + "/"}>
+            Yoyogi
+          </Link>
         </h1>
         <section>
           <LinkedH2
@@ -76,7 +81,10 @@ export default function About() {
             you’re interested.
           </blockquote>
           <p>
-            <Link href="/">Try it</Link>!
+            <Link href="/" as={LINK_PREFIX + "/"}>
+              Try it
+            </Link>
+            !
           </p>
         </section>
         <LinkedH2 slug="how-it-works" text="How it works" />

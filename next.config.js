@@ -1,9 +1,9 @@
-const ghPages = !!process.env.GHPAGES_EXPORT;
+const assetPrefix = process.env.NEXT_PUBLIC_ASSET_PREFIX;
 
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  assetPrefix: ghPages ? '/yoyogi/' : undefined,
+  assetPrefix: assetPrefix,
   reactStrictMode: true,
   swcMinify: true,
   // See
