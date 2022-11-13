@@ -4,8 +4,8 @@ import { Thread } from "./Thread";
 import styles from "../styles/components.module.css";
 
 export type Trees = {
-  // Set to hold the toots starting threads (even of length 1), also indexed by ID (number)
-  progenitorIds: Set<string>;
+  // Map to hold the toots starting threads (even of length 1), also indexed by ID (number). Values=newest (biggest) id child
+  progenitorIds: Map<string, string>;
   // ids of statuses by the author below which are only non-author statuses
   foldedIds: Map<string, boolean>;
   // Map between ID (number) and its corresponding status object
@@ -24,7 +24,7 @@ export type Trees = {
 
 function initializeTrees(): Trees {
   return {
-    progenitorIds: new Set(),
+    progenitorIds: new Map(),
     foldedIds: new Map(),
     id2status: new Map(),
     child2parentid: new Map(),
@@ -131,8 +131,8 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
         </button>
       </div>
       {Array.from(trees.progenitorIds)
-        .sort((a, b) => b.localeCompare(a))
-        .filter((id) => {
+        .sort((a, b) => b[1].localeCompare(a[1]))
+        .filter(([id]) => {
           // omit boosts that we have replies to
           const boost = getGuaranteed(trees.id2status, id).reblog;
           if (!boost) {
@@ -144,7 +144,7 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
             trees.foldedIds.get(boost.id) === true
           );
         })
-        .map((id) => (
+        .map(([id]) => (
           <Thread
             key={id + "/0"}
             trees={trees}
@@ -233,7 +233,7 @@ async function addStatusesToTreesImpure(
     } else {
       progenitor = s;
     }
-    trees.progenitorIds.add(progenitor.id);
+    trees.progenitorIds.set(progenitor.id, "");
 
     const data = (await megalodon.getStatusContext(progenitor.id)).data;
     const descendants = data.descendants;
@@ -279,17 +279,21 @@ function traverseFromTop(
   id: string,
   trees: Trees,
   authorId: string
-): { all: number; shown: number; authorFound: boolean } {
+): { all: number; shown: number; authorFound: boolean; maxUnfoldedId: string } {
   const children = trees.parent2childid.get(id);
   if (!children) {
     const all = 0;
     const shown = 0;
     const authorFound = trees.id2status.get(id)?.account.id === authorId;
+    const maxUnfoldedId = id;
 
     trees.id2numDescendants.set(id, { all, shown });
     trees.foldedIds.set(id, !authorFound);
+    if (trees.progenitorIds.has(id)) {
+      trees.progenitorIds.set(id, maxUnfoldedId);
+    }
 
-    return { all, shown, authorFound };
+    return { all, shown, authorFound, maxUnfoldedId };
   }
   const recur = Array.from(children, (id) =>
     traverseFromTop(id, trees, authorId)
@@ -304,10 +308,21 @@ function traverseFromTop(
   const shown =
     sum(Array.from(children, (id) => +!trees.foldedIds.get(id))) + sumShown;
 
+  const unfoldedIds = recur
+    .filter((o) => o.authorFound)
+    .map((o) => o.maxUnfoldedId);
+  if (authorFound) {
+    unfoldedIds.push(id);
+  }
+  const maxUnfoldedId = minmaxStrings(unfoldedIds)[1] || "";
+
   trees.id2numDescendants.set(id, { all, shown });
   trees.foldedIds.set(id, !authorFound);
+  if (trees.progenitorIds.has(id)) {
+    trees.progenitorIds.set(id, maxUnfoldedId);
+  }
 
-  return { all, shown, authorFound };
+  return { all, shown, authorFound, maxUnfoldedId };
 }
 
 export function getGuaranteed<K, V>(m: Map<K, V>, key: K): V {
