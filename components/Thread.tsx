@@ -17,7 +17,7 @@ function basicStatusToJsx(
   reblog?: Entity.Status
 ): JSX.Element {
   if (status.reblog) {
-    return basicStatusToJsx(status.reblog, footer + "---reblogged", reblog);
+    return basicStatusToJsx(status.reblog, footer, status);
   }
   return (
     <>
@@ -41,8 +41,7 @@ function basicStatusToJsx(
           <span title={`Boosted on ${isoTimestampToNice(reblog.created_at)}`}>
             ♻️
           </span>
-        )}{" "}
-        {status.id}
+        )}
       </p>
       <div
         className={styles["dangerous-content"]}
