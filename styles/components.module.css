@@ -1,3 +1,6 @@
+.login-box {
+  margin: 0.5em;
+}
 .login-box label {
   padding-right: 1em;
 }
@@ -19,6 +22,7 @@
   overflow-y: scroll;
   min-width: 20em;
   max-width: 20em;
+  margin: 0.5em;
 }
 
 .selected-author {
@@ -34,6 +38,10 @@ main.griddy-main {
   grid-template-columns: 20vw 80vw;
   grid-template-rows: auto minmax(0, 1fr);
   max-height: 100vh;
+}
+
+.griddy-main h1 {
+  margin: 0.5em;
 }
 
 /* ?/// */

@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
+import styles from "../styles/about.module.css";
 
 const LINK_PREFIX = process.env.NEXT_PUBLIC_ASSET_PREFIX || "";
 
@@ -30,7 +31,7 @@ export default function About() {
         ></link>
       </Head>
 
-      <main>
+      <main className={styles["about"]}>
         <h1>
           About{" "}
           <Link href="/" as={LINK_PREFIX + "/"}>
