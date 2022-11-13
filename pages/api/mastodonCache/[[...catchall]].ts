@@ -29,7 +29,7 @@ const MASTODON = process.env.MASTODON || 'https://octodon.social';
 const CACHE_FILE_NAME = 'mastodon-cache.json';
 
 const localUrl = 'http://localhost:3000/api/mastodonCache';
-let cache: Record<string, string> = {};
+let cache: Record<string, string|Promise<string>> = {};
 
 if (existsSync(CACHE_FILE_NAME)) {
   cache = JSON.parse(readFileSync(CACHE_FILE_NAME, 'utf8'))
@@ -64,10 +64,10 @@ export default async function handler(
 
   const externalUrl = `${MASTODON}/${url.replace('/api/mastodonCache/', '')}`
   if (url in cache) {
-    const hit = cache[url];
+    const hit = await cache[url];
     console.log(`Cache found ${hit.length}-long entry for ${externalUrl}`)
     res.setHeader('Content-Type', 'application/json; charset=utf-8')
-    const linkHeader = cache[urlToLinkHeaderKey(url)];
+    const linkHeader = await cache[urlToLinkHeaderKey(url)];
     if (linkHeader) {
       res.setHeader('Link', linkHeader)
     }
@@ -80,35 +80,51 @@ export default async function handler(
       req.headers.authorization :
       '';
   console.log(`Fetching remote URL: ${externalUrl}`)
+
+  // must initialize these even though the constructor to Promise runs sync:
+  // see https://github.com/microsoft/TypeScript/issues/36968 and links
+  let resolve: (x: string) => void = () => {};
+  let reject: (x: any) => void = () => {};
+  const resultPromise = new Promise<string>((ok, notok) => {
+    // this runs synchronously per https://stackoverflow.com/a/31069505
+    resolve = ok;
+    reject = notok
+  });
+
   try {
+    cache[url] = resultPromise;
     const externalRequest = await fetch(
         externalUrl,
         {headers: {'User-Agent': 'Yoyogi Cache', 'Authorization': token}})
     if (externalRequest.ok) {
-      const text = await externalRequest.text();
-      console.log(`Remote fetch ok, ${
-          text.length} bytes received. Saving to cache and returning to client.`)
-      updateCache(url, text)
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
       const linkHeader = externalRequest.headers.get('link')
       if (linkHeader) {
         updateCache(
             urlToLinkHeaderKey(url), linkHeader.replaceAll(MASTODON, localUrl));
         res.setHeader('Link', linkHeader)
       }
+      const text = await externalRequest.text();
+      console.log(`Remote fetch ok, ${
+          text.length} bytes received. Saving to cache and returning to client.`);
+
+      resolve(text);
+      updateCache(url, text)
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.status(200).write(text)
       res.end()
       return
     }
-    console.error(`Remote fetch not ok: ${externalRequest.status} ${
-        externalRequest.statusText}`)
+    const err = `Remote fetch not ok: ${externalRequest.status} ${
+        externalRequest.statusText}`
+    console.error(err)
+    reject(err);
   } catch (e) {
-    console.error(
-        `Remote URL fetch failed
-- original URL: ${url}
-- external URL: ${externalUrl}
-- error:`,
-        e)
+    const errText = `Remote URL fetch failed
+    - original URL: ${url}
+    - external URL: ${externalUrl}
+    - error:`;
+    console.error(errText, e)
+    reject([errText, e]);
   }
   res.status(500).json({message: 'External network error, see logs'})
   return
