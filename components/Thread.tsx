@@ -11,9 +11,13 @@ const fmt = Intl.DateTimeFormat(undefined, {
 function isoTimestampToNice(s: string) {
   return fmt.format(new Date(s));
 }
-function basicStatusToJsx(status: Entity.Status, footer = ""): JSX.Element {
+function basicStatusToJsx(
+  status: Entity.Status,
+  footer: string,
+  reblog?: Entity.Status
+): JSX.Element {
   if (status.reblog) {
-    return basicStatusToJsx(status.reblog);
+    return basicStatusToJsx(status.reblog, footer + "---reblogged", reblog);
   }
   return (
     <>
@@ -32,7 +36,13 @@ function basicStatusToJsx(status: Entity.Status, footer = ""): JSX.Element {
           </span>
         ) : (
           <sup>{isoTimestampToNice(status.created_at)}</sup>
-        )}
+        )}{" "}
+        {reblog && (
+          <span title={`Boosted on ${isoTimestampToNice(reblog.created_at)}`}>
+            ♻️
+          </span>
+        )}{" "}
+        {status.id}
       </p>
       <div
         className={styles["dangerous-content"]}
@@ -82,6 +92,10 @@ export function Thread({
 }: ThreadProps) {
   const progenitor = getGuaranteed(trees.id2status, progenitorId);
   const bullets: JSX.Element[] = [];
+  const statusToBoostStatus = (e: Entity.Status) => {
+    const boostId = trees.origIdToBoostId.get(e.id);
+    return boostId ? trees.id2status.get(boostId) : undefined;
+  };
 
   let thisStatus: Entity.Status | undefined = progenitor;
   while (thisStatus) {
@@ -104,7 +118,11 @@ export function Thread({
       // either no children or just one child (straight-shot thread)
       bullets.push(
         <div key={thisStatus.id} className={styles["toot"]} id={thisStatus.id}>
-          {basicStatusToJsx(thisStatus, foldFooter)}
+          {basicStatusToJsx(
+            thisStatus,
+            foldFooter,
+            statusToBoostStatus(thisStatus)
+          )}
         </div>
       );
       thisStatus = childrenToShow[0]; // might be undefined! ok! While guard above will work
@@ -116,7 +134,11 @@ export function Thread({
             className={styles["toot"]}
             id={thisStatus.id}
           >
-            {basicStatusToJsx(thisStatus, foldFooter)}
+            {basicStatusToJsx(
+              thisStatus,
+              foldFooter,
+              statusToBoostStatus(thisStatus)
+            )}
           </div>
           {childrenToShow.map((s, siblingIdx) => (
             <Thread

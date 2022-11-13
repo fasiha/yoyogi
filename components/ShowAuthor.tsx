@@ -17,6 +17,9 @@ export type Trees = {
   id2numDescendants: Map<string, { all: number; shown: number }>;
   maxContiguousId?: string;
   minContiguousId?: string;
+
+  // has this status been boosted? If so, key = original ID, value = author ID.
+  origIdToBoostId: Map<string, string>;
 };
 
 function initializeTrees(): Trees {
@@ -27,6 +30,7 @@ function initializeTrees(): Trees {
     child2parentid: new Map(),
     parent2childid: new Map(),
     id2numDescendants: new Map(),
+    origIdToBoostId: new Map(),
   };
 }
 
@@ -61,6 +65,7 @@ async function newer(
   while (trees.progenitorIds.size < initialNumThreads + numNewThreads) {
     const res = await megalodon.getAccountStatuses(account.id, {
       min_id: trees.maxContiguousId,
+      limit: 1,
     });
     if (res.data.length === 0) {
       break;
@@ -79,6 +84,7 @@ async function older(
   while (trees.progenitorIds.size < initialNumThreads + numNewThreads) {
     const res = await megalodon.getAccountStatuses(account.id, {
       max_id: trees.minContiguousId,
+      limit: 1,
     });
     if (res.data.length === 0) {
       break;
@@ -126,6 +132,18 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
       </div>
       {Array.from(trees.progenitorIds)
         .sort((a, b) => b.localeCompare(a))
+        .filter((id) => {
+          // omit boosts that we have replies to
+          const boost = getGuaranteed(trees.id2status, id).reblog;
+          if (!boost) {
+            return true;
+          }
+          // show this boost if we have zero replies from the author or if we have author-replies, they're not hidden
+          return (
+            !trees.id2status.has(boost.id) ||
+            trees.foldedIds.get(boost.id) === true
+          );
+        })
         .map((id) => (
           <Thread
             key={id + "/0"}
@@ -170,12 +188,17 @@ function minmaxStrings(v: string[]): [string | undefined, string | undefined] {
   return [min, max];
 }
 
+function findDescendants(trees: Trees, id: string): string[] {
+  const children = Array.from(trees.parent2childid.get(id) || []);
+  return [id].concat(children.flatMap((o) => findDescendants(trees, o)));
+}
 async function addStatusesToTreesImpure(
   trees: Trees,
   statuses: Entity.Status[],
   megalodon: MegalodonInterface,
   authorId: string
 ): Promise<void> {
+  (window as any).findDescendants = findDescendants;
   {
     const ids = statuses.map((s) => s.id);
     if (trees.maxContiguousId !== undefined) {
@@ -217,8 +240,15 @@ async function addStatusesToTreesImpure(
     // will this have a limit? Do we have to recurse with `max_id`?
 
     trees.id2status.set(progenitor.id, progenitor);
+    if (progenitor.reblog?.id) {
+      trees.origIdToBoostId.set(progenitor.reblog.id, progenitor.id);
+    }
     for (const d of descendants) {
       trees.id2status.set(d.id, d);
+      if (d.reblog?.id) {
+        trees.origIdToBoostId.set(d.reblog.id, d.id);
+      }
+
       const parentOfD = d.in_reply_to_id;
       if (!parentOfD) {
         // won't happen since this is not a progenitor
