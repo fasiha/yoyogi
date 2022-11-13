@@ -44,7 +44,17 @@ main.griddy-main {
   margin: 0.5em;
 }
 
-/* ?/// */
+@media screen and (max-width: 40rem) {
+  main.griddy-main {
+    grid-template-rows: auto;
+    grid-template-columns: auto;
+  }
+  .follows-and-threads {
+    grid-column: auto;
+  }
+}
+
+/* Author/thread/toot */
 
 .dangerous-content {
   display: inline;
