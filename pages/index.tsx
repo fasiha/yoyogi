@@ -1,5 +1,7 @@
 import Head from "next/head";
+import { ToastContainer } from "react-toastify";
 import { Yoyogi } from "../components/components";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Home() {
   return (
@@ -17,6 +19,14 @@ export default function Home() {
       </Head>
 
       <Yoyogi />
+      <ToastContainer
+        position="top-center"
+        autoClose={1000}
+        hideProgressBar={true}
+        pauseOnHover={false}
+        newestOnTop={true}
+        closeOnClick={true}
+      />
     </div>
   );
 }

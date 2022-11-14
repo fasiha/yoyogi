@@ -64,7 +64,7 @@ export default async function handler(
     return;
   }
 
-  // await sleep(1000); // helpful to test loading spinners
+  await sleep(1000);  // helpful to test loading spinners
 
   const externalUrl = `${MASTODON}/${url.replace('/api/mastodonCache/', '')}`
   if (url in cache) {

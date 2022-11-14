@@ -1,5 +1,6 @@
 import generator, { Entity, MegalodonInterface } from "megalodon";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import Link from "next/link";
 import styles from "../styles/components.module.css";
 import { FollowsList } from "./FollowsList";
@@ -210,7 +211,6 @@ export function Yoyogi() {
   const [follows, setFollows] = useState<Entity.Account[]>([]);
   const [author, setAuthor] = useState<Entity.Account | undefined>(undefined);
   const [initialUrl, setInitialUrl] = useState("");
-  const [loading, setLoading] = useState("");
 
   const router = useRouter();
   useEffect(() => {
@@ -259,16 +259,23 @@ export function Yoyogi() {
     initialUrl,
     switchServer: logout,
     submit: async (enteredUrl: string) => {
-      setLoading("Loading");
+      const toastId = toast.loading("Logging in…");
+
       enteredUrl = removeTrailingSlashes(enteredUrl);
       const res = await register1(enteredUrl);
       if (res) {
         setMegalodon(res.megalodon);
         setAccount(res.account);
         setAuthor(res.account);
+        toast.update(toastId, { render: "Loading follows…" });
         setFollows(await getFollows(res.megalodon, res.account));
+        toast.update(toastId, {
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+          render: `Logged in!`,
+        });
       }
-      setLoading("");
     },
   };
   return (
@@ -285,7 +292,6 @@ export function Yoyogi() {
       {account && megalodon && author && (
         <div className={styles["follows-and-threads"]}>
           <FollowsList
-            loading={loading}
             myAccount={account}
             follows={follows}
             authorId={author.id}

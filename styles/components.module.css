@@ -68,7 +68,7 @@ main.griddy-main {
 .follows-and-threads > .thread {
   flex-grow: 1;
   flex-shrink: 0;
-  width: 20em;
+  max-width: 20em;
   overflow-wrap: break-word;
   overflow-y: scroll;
 }
@@ -121,28 +121,4 @@ main.griddy-main {
 
 .supsub sub {
   top: 0.3em;
-}
-
-/* Via https://css-tricks.com/single-element-loaders-the-spinner/ */
-.loader-spinner {
-  width: 2em; /* control the size */
-  aspect-ratio: 1;
-  display: grid;
-  mask: conic-gradient(from 22deg, #0003, #000);
-  animation: load 1s steps(8) infinite;
-}
-.loader-spinner,
-.loader-spinner:before {
-  --_g: linear-gradient(gray 0 0) 50%; /* update the color here */
-  background: var(--_g) / 34% 8% space no-repeat,
-    var(--_g) / 8% 34% no-repeat space;
-}
-.loader-spinner:before {
-  content: "";
-  transform: rotate(45deg);
-}
-@keyframes load {
-  to {
-    transform: rotate(1turn);
-  }
 }

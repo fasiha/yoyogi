@@ -2,6 +2,7 @@ import { Entity, MegalodonInterface } from "megalodon";
 import { useEffect, useState } from "react";
 import { Thread } from "./Thread";
 import styles from "../styles/components.module.css";
+import { Id, toast } from "react-toastify";
 
 export type Trees = {
   // Map to hold the toots starting threads (even of length 1), also indexed by ID (number). Values=newest (biggest) id child
@@ -39,8 +40,12 @@ async function newest(
   account: Entity.Account
 ): Promise<Trees> {
   const trees = initializeTrees();
+  const toastId = toast.loading("Loading toots and threads…");
+  const initialNumBoosts = trees.origIdToBoostId.size;
+  const initialNumThreads = trees.progenitorIds.size;
   const res = await megalodon.getAccountStatuses(account.id, { limit: 5 });
   await addStatusesToTreesImpure(trees, res.data, megalodon, account.id);
+  doneToast(toastId, initialNumThreads, initialNumBoosts, trees);
   return trees;
 }
 async function oldest(
@@ -48,40 +53,60 @@ async function oldest(
   account: Entity.Account
 ): Promise<Trees> {
   const trees = initializeTrees();
+  const toastId = toast.loading("Loading toots and threads…");
+  const initialNumBoosts = trees.origIdToBoostId.size;
+  const initialNumThreads = trees.progenitorIds.size;
   const res = await megalodon.getAccountStatuses(account.id, {
     min_id: "0",
     limit: 5,
   });
   await addStatusesToTreesImpure(trees, res.data, megalodon, account.id);
+  doneToast(toastId, initialNumThreads, initialNumBoosts, trees);
   return trees;
 }
 async function newer(
   megalodon: MegalodonInterface,
   account: Entity.Account,
   trees: Trees,
-  numNewThreads: number
+  numNewThreads: number,
+  maxRequests = 5
 ): Promise<Trees> {
+  const toastId = toast.loading("Loading toots and threads…");
+  const initialNumBoosts = trees.origIdToBoostId.size;
   const initialNumThreads = trees.progenitorIds.size;
-  while (trees.progenitorIds.size < initialNumThreads + numNewThreads) {
+  while (
+    trees.progenitorIds.size < initialNumThreads + numNewThreads &&
+    maxRequests > 0
+  ) {
     const res = await megalodon.getAccountStatuses(account.id, {
       min_id: trees.maxContiguousId,
       limit: 1,
     });
+    maxRequests--;
     if (res.data.length === 0) {
       break;
     }
     await addStatusesToTreesImpure(trees, res.data, megalodon, account.id);
   }
+  doneToast(toastId, initialNumThreads, initialNumBoosts, trees);
   return { ...trees };
 }
 async function older(
   megalodon: MegalodonInterface,
   account: Entity.Account,
   trees: Trees,
-  numNewThreads: number
+  numNewThreads: number,
+  maxRequests = 5
 ): Promise<Trees> {
+  const toastId = toast.loading("Loading toots and threads…");
+  const initialNumBoosts = trees.origIdToBoostId.size;
   const initialNumThreads = trees.progenitorIds.size;
-  while (trees.progenitorIds.size < initialNumThreads + numNewThreads) {
+  while (
+    trees.progenitorIds.size < initialNumThreads + numNewThreads &&
+    maxRequests > 0
+  ) {
+    maxRequests--;
+
     const res = await megalodon.getAccountStatuses(account.id, {
       max_id: trees.minContiguousId,
       limit: 1,
@@ -91,7 +116,25 @@ async function older(
     }
     await addStatusesToTreesImpure(trees, res.data, megalodon, account.id);
   }
+  doneToast(toastId, initialNumThreads, initialNumBoosts, trees);
   return { ...trees };
+}
+function doneToast(
+  toastId: Id,
+  initialNumThreads: number,
+  initialNumBoosts: number,
+  trees: Trees
+) {
+  const nProgenitors = trees.progenitorIds.size - initialNumThreads;
+  const nBoosts = trees.origIdToBoostId.size - initialNumBoosts;
+  toast.update(toastId, {
+    type: "success",
+    isLoading: false,
+    autoClose: 1000,
+    render: `Loaded ${nProgenitors} thread${
+      nProgenitors === 1 ? "" : "s"
+    }, ${nBoosts} boost${nBoosts === 1 ? "" : "s"}`,
+  });
 }
 
 export interface ShowAuthorProps {
@@ -100,14 +143,13 @@ export interface ShowAuthorProps {
 }
 export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
   const [trees, setTrees] = useState(() => initializeTrees());
-  const [loading, setLoading] = useState("Loading");
+  const [hideBoosts, setHideBoosts] = useState(false);
 
   // initial populate for this account
   useEffect(() => {
     (async function () {
       const trees = await newest(megalodon, account);
       setTrees(trees);
-      setLoading("");
     })();
   }, [megalodon, account]);
   // Save to global
@@ -115,32 +157,42 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
     (window as any).trees = trees;
   }, [trees]);
 
+  const boostCheckLoader = (
+    <>
+      <div>
+        <label htmlFor="hide-boost-check">
+          Hide boosts?
+          <input
+            type="checkbox"
+            id="hide-boost-check"
+            checked={hideBoosts}
+            onChange={() => {
+              setHideBoosts((b) => !b);
+            }}
+          />
+        </label>
+      </div>
+    </>
+  );
+
   return (
     <>
       <div className={styles["button-bar"]}>
         <button
           onClick={async () => {
-            setLoading("Loading");
             setTrees(await newest(megalodon, account));
-            setLoading("");
           }}
         >
           Newest
         </button>
         <button
           onClick={async () => {
-            setLoading("Loading");
             setTrees(await newer(megalodon, account, trees, 1));
-            setLoading("");
           }}
         >
           Newer
         </button>
-        {loading && (
-          <span className={styles["loading"]}>
-            {loading} <span className={styles["loader-spinner"]}></span>
-          </span>
-        )}
+        {boostCheckLoader}
       </div>
       {Array.from(trees.progenitorIds)
         .sort((a, b) => b[1].localeCompare(a[1]))
@@ -149,6 +201,9 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
           const boost = getGuaranteed(trees.id2status, id).reblog;
           if (!boost) {
             return true;
+          }
+          if (hideBoosts && boost) {
+            return false;
           }
           // show this boost if we have zero replies from the author or if we have author-replies, they're not hidden
           return (
@@ -169,27 +224,19 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
       <div className={styles["button-bar"]}>
         <button
           onClick={async () => {
-            setLoading("Loading");
             setTrees(await older(megalodon, account, trees, 1));
-            setLoading("");
           }}
         >
           Older
         </button>
         <button
           onClick={async () => {
-            setLoading("Loading");
             setTrees(await oldest(megalodon, account));
-            setLoading("");
           }}
         >
           Oldest
         </button>
-        {loading && (
-          <span className={styles["loading"]}>
-            {loading} <span className={styles["loader-spinner"]}></span>
-          </span>
-        )}
+        {boostCheckLoader}{" "}
       </div>
     </>
   );
