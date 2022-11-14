@@ -45,7 +45,7 @@ export default function About() {
           />
           <p style={{ fontSize: "x-large" }}>I hate the timeline.</p>
           <p>
-            I <em>love</em> following tons of people, I getting windows into
+            I <em>love</em> following tons of people, and getting windows into
             their lives, and sometimes being invited to step into the door.
           </p>
           <p>
