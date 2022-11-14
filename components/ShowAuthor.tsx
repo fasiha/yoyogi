@@ -80,7 +80,7 @@ async function newer(
   ) {
     const res = await megalodon.getAccountStatuses(account.id, {
       min_id: trees.maxContiguousId,
-      limit: 1,
+      limit: 5,
     });
     maxRequests--;
     if (res.data.length === 0) {
@@ -109,7 +109,7 @@ async function older(
 
     const res = await megalodon.getAccountStatuses(account.id, {
       max_id: trees.minContiguousId,
-      limit: 1,
+      limit: 5,
     });
     if (res.data.length === 0) {
       break;

@@ -152,6 +152,7 @@ export default function About() {
             <strong>What features are next?</strong> Great question.
           </p>
           <ol>
+            <li>Desperately show media: avatars, images. videos.</li>
             <li>
               My mental image for Yoyogi is frankly Google Reader. I’d love it
               if it kept track of how many unread toots I have from each of my
