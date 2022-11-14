@@ -17,6 +17,13 @@ h3 {
   box-sizing: border-box;
 }
 
+a {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;

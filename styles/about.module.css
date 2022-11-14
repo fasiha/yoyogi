@@ -7,3 +7,11 @@ main.about {
     "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
+
+h2.slugged a {
+  display: none;
+}
+
+h2.slugged:hover a {
+  display: inline;
+}

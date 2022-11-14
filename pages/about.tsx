@@ -10,8 +10,8 @@ interface LinkedH2Props {
 }
 function LinkedH2({ text, slug }: LinkedH2Props) {
   return (
-    <h2 id={slug}>
-      <Link href={"#" + slug}>§</Link> {text}
+    <h2 id={slug} className={styles["slugged"]}>
+      {text} <Link href={"#" + slug}>#</Link>
     </h2>
   );
 }

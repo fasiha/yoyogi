@@ -272,7 +272,7 @@ export function Yoyogi() {
         toast.update(toastId, {
           type: "success",
           isLoading: false,
-          autoClose: 3000,
+          autoClose: 1000,
           render: `Logged in!`,
         });
       }
