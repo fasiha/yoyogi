@@ -100,11 +100,14 @@ export interface ShowAuthorProps {
 }
 export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
   const [trees, setTrees] = useState(() => initializeTrees());
+  const [loading, setLoading] = useState("Loading");
+
   // initial populate for this account
   useEffect(() => {
     (async function () {
       const trees = await newest(megalodon, account);
       setTrees(trees);
+      setLoading("");
     })();
   }, [megalodon, account]);
   // Save to global
@@ -117,18 +120,27 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
       <div className={styles["button-bar"]}>
         <button
           onClick={async () => {
+            setLoading("Loading");
             setTrees(await newest(megalodon, account));
+            setLoading("");
           }}
         >
           Newest
         </button>
         <button
           onClick={async () => {
+            setLoading("Loading");
             setTrees(await newer(megalodon, account, trees, 1));
+            setLoading("");
           }}
         >
           Newer
         </button>
+        {loading && (
+          <span className={styles["loading"]}>
+            {loading} <span className={styles["loader-spinner"]}></span>
+          </span>
+        )}
       </div>
       {Array.from(trees.progenitorIds)
         .sort((a, b) => b[1].localeCompare(a[1]))
@@ -157,18 +169,27 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
       <div className={styles["button-bar"]}>
         <button
           onClick={async () => {
+            setLoading("Loading");
             setTrees(await older(megalodon, account, trees, 1));
+            setLoading("");
           }}
         >
           Older
         </button>
         <button
           onClick={async () => {
+            setLoading("Loading");
             setTrees(await oldest(megalodon, account));
+            setLoading("");
           }}
         >
           Oldest
         </button>
+        {loading && (
+          <span className={styles["loading"]}>
+            {loading} <span className={styles["loader-spinner"]}></span>
+          </span>
+        )}
       </div>
     </>
   );

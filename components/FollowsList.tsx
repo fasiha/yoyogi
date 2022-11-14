@@ -5,8 +5,10 @@ export interface FollowsListProps {
   follows: Entity.Account[];
   authorId: string;
   setAuthor: (account: Entity.Account) => void;
+  loading: string;
 }
 export function FollowsList({
+  loading,
   myAccount,
   follows,
   authorId,
@@ -27,6 +29,11 @@ export function FollowsList({
           </li>
         ))}
       </ol>
+      {loading && (
+        <span className={styles["loading"]}>
+          {loading} <span className={styles["loader-spinner"]}></span>
+        </span>
+      )}
     </div>
   );
 }

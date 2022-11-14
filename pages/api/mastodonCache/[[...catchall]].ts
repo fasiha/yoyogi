@@ -48,6 +48,8 @@ function urlToLinkHeaderKey(url: string) {
   return url + '___header-link'
 }
 
+const sleep = (ms: number) => new Promise(ok => setTimeout(ok, ms))
+
 export default async function handler(
     req: NextApiRequest, res: NextApiResponse) {
   console.log('Requested ', req.url);
@@ -61,6 +63,8 @@ export default async function handler(
     res.status(400).json({message: 'no URL?'})
     return;
   }
+
+  // await sleep(1000); // helpful to test loading spinners
 
   const externalUrl = `${MASTODON}/${url.replace('/api/mastodonCache/', '')}`
   if (url in cache) {
