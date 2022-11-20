@@ -1,4 +1,4 @@
-import { Entity, MegalodonInterface } from "megalodon";
+import { Entity } from "megalodon";
 import { getGuaranteed, Trees } from "./ShowAuthor";
 import styles from "../styles/components.module.css";
 import { Fragment } from "react";
@@ -21,28 +21,43 @@ function basicStatusToJsx(
   }
   return (
     <>
-      <p>
-        <a
-          title={"Go to original"}
-          href={status.url}
-          className={styles["toot-author"]}
-        >
-          {status.account.username}
-        </a>
-        {footer ? (
-          <span className={styles["supsub"]}>
-            <sup>{isoTimestampToNice(status.created_at)}</sup>
-            <sub>{footer}</sub>
-          </span>
-        ) : (
-          <sup>{isoTimestampToNice(status.created_at)}</sup>
-        )}{" "}
-        {reblog && (
-          <span title={`Boosted on ${isoTimestampToNice(reblog.created_at)}`}>
-            ♻️
-          </span>
-        )}
-      </p>
+      <div className={styles["toot-topbar"]}>
+        <div className={styles["avatar-image"]}>
+          <a title={"Go to original"} href={status.url}>
+            <img
+              alt={status.account.username}
+              src={status.account.avatar_static}
+            />
+          </a>
+        </div>
+        <div>
+          <a
+            title={"Go to original"}
+            href={status.url}
+            className={styles["toot-author"]}
+          >
+            {status.account.username}
+          </a>
+          <br />
+          <small>
+            {isoTimestampToNice(status.created_at)}
+            <br />
+            {footer && (
+              <>
+                {footer}
+                <br />
+              </>
+            )}
+            {reblog && (
+              <span
+                title={`Boosted on ${isoTimestampToNice(reblog.created_at)}`}
+              >
+                ♻️
+              </span>
+            )}
+          </small>
+        </div>
+      </div>
       <div
         className={styles["dangerous-content"]}
         dangerouslySetInnerHTML={{ __html: status.content }}

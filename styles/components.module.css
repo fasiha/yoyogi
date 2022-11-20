@@ -106,19 +106,21 @@ main.griddy-main {
   font-size: 0.75em;
 }
 
-/* https://stackoverflow.com/a/24908149 */
-.supsub {
-  display: inline-block;
+/* Avatars */
+.toot-topbar {
+  display: flex;
 }
 
-.supsub sup,
-.supsub sub {
-  position: relative;
-  display: block;
-  font-size: 0.75em;
-  line-height: 1.2;
+.avatar-image {
+  width: 3em;
+  margin-right: 0.25em;
 }
 
-.supsub sub {
-  top: 0.3em;
+.avatar-image img {
+  max-width: 100%;
+}
+
+.avatar-image a {
+  width: 3em;
+  margin-right: 0.25em;
 }
