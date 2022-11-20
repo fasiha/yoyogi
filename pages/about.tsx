@@ -81,15 +81,24 @@ export default function About() {
             <a href="https://github.com/fasiha/yoyogi/issues">Holler</a> if
             you’re interested.
           </blockquote>
+        </section>
+        <section>
+          <LinkedH2 slug="links" text="Links" />
           <p>
             <Link href="/" as={LINK_PREFIX + "/"}>
               Try it
             </Link>
-            !
+            ! Star it or leave a bug report on{" "}
+            <a href="https://github.com/fasiha/yoyogi">GitHub</a>!
+          </p>
+          <p>
+            Many thanks to{" "}
+            <a href="https://toot.cafe/@qm3jp">@qm3jp@toot.cafe</a> for
+            invaluable advie and feedback during the design and testing phase!
           </p>
         </section>
-        <LinkedH2 slug="how-it-works" text="How it works" />
         <section>
+          <LinkedH2 slug="how-it-works" text="How it works" />
           <p>
             So right now Yoyogi runs all its code in your browser (like{" "}
             <a href="https://pinafore.social/">Pinafore</a>). There is no

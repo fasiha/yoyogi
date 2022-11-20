@@ -1,4 +1,4 @@
-## Yoyogi
+# Yoyogi
 
 Yoyogi is, in simple terms, a Google Reader-inspired Mastodon (and soon Pleroma and Misskey) reader app. It rejects The Timeline, where posts from lots of people are interleaved temporally. It instead elevates the author and centers the thread. You log in. You pick one account you’re following. You see just their threads.
 
@@ -6,6 +6,9 @@ Yoyogi is, in simple terms, a Google Reader-inspired Mastodon (and soon Pleroma 
 - Read its "about" page! https://fasiha.github.io/yoyogi/about
 
 The rest of this README is a general tutorial exploring the Mastodon API with command-line tools intended for developers.
+
+Acknowledgements: thanks to https://toot.cafe/@qm3jp for a ton of advice and feedback and testing; thanks to everyone who tried Yoyogi and gave feedback (see, e.g., [this thread](https://octodon.social/@22/109341060401995256)).
+
 ## Mastodon API tutorial
 ### Get a token
 1. Log into your Mastodon instance
