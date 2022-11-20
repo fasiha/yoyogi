@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { Entity } from "megalodon";
 import { getGuaranteed, Trees } from "./ShowAuthor";
 import styles from "../styles/components.module.css";
@@ -41,17 +42,17 @@ function basicStatusToJsx(
           <br />
           <small>
             {isoTimestampToNice(status.created_at)}
-            <br />
             {footer && (
               <>
-                {footer}
                 <br />
+                {footer}
               </>
             )}
             {reblog && (
               <span
                 title={`Boosted on ${isoTimestampToNice(reblog.created_at)}`}
               >
+                {" "}
                 ♻️
               </span>
             )}
@@ -61,7 +62,25 @@ function basicStatusToJsx(
       <div
         className={styles["dangerous-content"]}
         dangerouslySetInnerHTML={{ __html: status.content }}
-      ></div>{" "}
+      ></div>
+      {status.media_attachments.length ? (
+        <div className={styles["attachments-list"]}>
+          {status.media_attachments.map((a, i) => (
+            <img
+              key={i}
+              src={a.preview_url}
+              alt={a.description || undefined}
+              style={{
+                aspectRatio: a.meta
+                  ? (a.meta as { aspect: number }).aspect
+                  : undefined,
+              }}
+            />
+          ))}
+        </div>
+      ) : (
+        ""
+      )}
     </>
   );
 }

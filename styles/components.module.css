@@ -83,7 +83,6 @@ main.griddy-main {
 .toot {
   padding-top: 1em;
   padding-bottom: 1em;
-  border-bottom: 3px gray dotted;
 }
 .toot:last-child {
   border-bottom: none;
@@ -123,4 +122,8 @@ main.griddy-main {
 .avatar-image a {
   width: 3em;
   margin-right: 0.25em;
+}
+
+.attachments-list img {
+  width: 100%;
 }
