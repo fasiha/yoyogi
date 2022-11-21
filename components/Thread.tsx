@@ -201,7 +201,7 @@ export function Thread({
   const goLeft =
     siblingIdx && siblingIdx > 1 ? (
       <a
-        href={`#collapsible-${siblingIds[siblingIdx - 1 - 1]}`}
+        href={`#collapsible-${siblingIds[siblingIdx - 1 - 1].id}`}
         title="Previous sub-thread"
       >
         👈
@@ -212,7 +212,7 @@ export function Thread({
   const goRight =
     siblingIdx && siblingIdx < numSiblings ? (
       <a
-        href={`#collapsible-${siblingIds[siblingIdx + 1 - 1]}`}
+        href={`#collapsible-${siblingIds[siblingIdx + 1 - 1].id}`}
         title="Next sub-thread"
       >
         👉
