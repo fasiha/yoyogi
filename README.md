@@ -182,5 +182,6 @@ Yoyogi now has oldest/newest and older/newer. Let's fill in more of its features
 - [x] Horizontal scroll for older/newer threads, vertical scroll for within-thread.
 - [ ] Make `newest` (and I guess `oldest`) not reset the threads but check if they need to.
 - [x] add links
+- [x] add avatars and media/images
 
 That'll be good enough for a client-side-only version. Based on feedback, invest in a hosted solution that allows users to use the app between devices.
