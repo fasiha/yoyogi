@@ -20,10 +20,17 @@
 }
 
 .login-box0 {
-  margin: 0.5em;
-  padding: 2em;
-  border: 2px solid black;
-  border-radius: 10px;
+  border: solid 1px grey;
+  border-radius: 20px;
+  padding: 5px;
+}
+
+.header {
+  background-color: ghostwhite;
+  display: flex;
+
+  align-items: center;
+  height: 5em;
 }
 
 .login-box label {
@@ -45,13 +52,16 @@
 
 .follows-list {
   overflow-y: scroll;
+  max-height: calc(100vh - 6em);
   min-width: 20em;
   max-width: 20em;
   margin: 0.5em;
+  margin-bottom: 0;
 }
 
 .selected-author {
   font-weight: bold;
+  font-style: italic;
 }
 
 .selected-author::after {
@@ -94,6 +104,8 @@ main.griddy-main {
   max-width: 20em;
   overflow-wrap: break-word;
   overflow-y: scroll;
+  max-height: calc(100vh - 6em);
+  margin: 0.5em;
 }
 
 .thread summary {
@@ -119,11 +131,23 @@ main.griddy-main {
 .button-bar {
   padding-top: 0.1em;
   padding-bottom: 0.1em;
+  max-height: calc(100vh - 6em);
+  margin: 0.5em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
 }
 .button-bar button {
   margin-left: 0.25em;
+  width: 5em;
 }
 
+.hide-div {
+  padding: 0.2em;
+  text-align: center;
+}
 .thread sup {
   font-size: 0.75em;
 }

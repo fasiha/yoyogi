@@ -159,7 +159,7 @@ export function ShowAuthor({ account, megalodon }: ShowAuthorProps) {
 
   const boostCheckLoader = (
     <>
-      <div>
+      <div className={styles["hide-div"]}>
         <label htmlFor="hide-boost-check">
           Hide boosts?
           <input

@@ -33,7 +33,7 @@ function Login({ initialUrl, loggedIn, submit, switchServer }: LoginProps) {
     <div className={loggedIn ? styles["login-box0"] : styles["login-box"]}>
       {loggedIn ? (
         <>
-          Logged into {url}.{" "}
+          Logged into {url.split("//").at(-1)}{" "}
           <button
             onClick={() => {
               switchServer();
@@ -280,16 +280,18 @@ export function Yoyogi() {
   };
   return (
     <main className={styles["griddy-main"]}>
-      <h1>
-        Yoyogi{" "}
-        <sup>
-          <Link href="/about" as={LINK_PREFIX + "/about"}>
-            About
-          </Link>
-        </sup>
-      </h1>
-      <div className={styles["login-div"]}>
-        <Login {...loginProps} />
+      <div className={account ? styles["header"] : ""}>
+        <h1>
+          Yoyogi{" "}
+          <sup>
+            <Link href="/about" as={LINK_PREFIX + "/about"}>
+              About
+            </Link>
+          </sup>
+        </h1>
+        <div className={styles["login-div"]}>
+          <Login {...loginProps} />
+        </div>
       </div>
       {account && megalodon && author && (
         <div className={styles["follows-and-threads"]}>
