@@ -1,6 +1,31 @@
+.login-div {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .login-box {
   margin: 0.5em;
+  height: 30vh;
+  width: 50vw;
+  min-height: 300px;
+  min-width: 450px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  border: 2px solid black;
+  border-radius: 10px;
 }
+
+.login-box0 {
+  margin: 0.5em;
+  padding: 2em;
+  border: 2px solid black;
+  border-radius: 10px;
+}
+
 .login-box label {
   padding-right: 1em;
 }
@@ -34,10 +59,8 @@
 }
 
 main.griddy-main {
-  display: grid;
-  grid-template-columns: 20vw 80vw;
-  grid-template-rows: auto minmax(0, 1fr);
-  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .griddy-main h1 {

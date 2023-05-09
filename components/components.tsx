@@ -30,7 +30,7 @@ function Login({ initialUrl, loggedIn, submit, switchServer }: LoginProps) {
   }, [initialUrl]);
 
   return (
-    <div className={styles["login-box"]}>
+    <div className={loggedIn ? styles["login-box0"] : styles["login-box"]}>
       {loggedIn ? (
         <>
           Logged into {url}.{" "}
@@ -288,7 +288,9 @@ export function Yoyogi() {
           </Link>
         </sup>
       </h1>
-      <Login {...loginProps} />
+      <div className={styles["login-div"]}>
+        <Login {...loginProps} />
+      </div>
       {account && megalodon && author && (
         <div className={styles["follows-and-threads"]}>
           <FollowsList
