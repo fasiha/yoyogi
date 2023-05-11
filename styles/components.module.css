@@ -31,6 +31,9 @@
 
   align-items: center;
   height: 5em;
+  @media (prefers-color-scheme: dark) {
+    background: #18191a;
+  }
 }
 
 .login-box label {
@@ -101,7 +104,7 @@ main.griddy-main {
 .follows-and-threads > .thread {
   flex-grow: 1;
   flex-shrink: 0;
-  max-width: 20em;
+  width: 20em;
   overflow-wrap: break-word;
   overflow-y: scroll;
   max-height: calc(100vh - 6em);
