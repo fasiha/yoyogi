@@ -281,9 +281,9 @@ export function Yoyogi() {
   return (
     <main className={styles["griddy-main"]}>
       <div className={account ? styles["header"] : ""}>
-        <h1>
+        <h1 className="header-title">
           Yoyogi{" "}
-          <sup>
+          <sup className={styles["sup-link"]}>
             <Link href="/about" as={LINK_PREFIX + "/about"}>
               About
             </Link>
