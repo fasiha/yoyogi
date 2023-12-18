@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function Home() {
   return (
-    <div>
+    <div style={{ overflowY: "hidden" }}>
       <Head>
         <title>Yoyogi</title>
         <meta
