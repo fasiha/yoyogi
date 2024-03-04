@@ -1,5 +1,7 @@
 # Yoyogi
 
+![A screen capture, starts out by me logging into Octodon by selecting it from a dropdown, after which, a second later, a list of accounts I follow shows up on the left, and a few columns of toot threads show up on the right from my account. As I scroll to the right, I pause to scroll down some of the longer threads. Nested replies are collapsible and I click on one. After I scroll all the way to the right, I hit the last thread, so I click a button labeled "Older" (above "Oldest", and a checkbox that says "Hide boosts") to load more toot thread, and continue scrolling right.](./yoyogi-demo.mov)
+
 Yoyogi is, in simple terms, a Google Reader-inspired Mastodon (and soon Pleroma and Misskey) reader app. It rejects The Timeline, where posts from lots of people are interleaved temporally. It instead elevates the author and centers the thread. You log in. You pick one account you’re following. You see just their threads.
 
 - Visit the app! https://fasiha.github.io/yoyogi/
